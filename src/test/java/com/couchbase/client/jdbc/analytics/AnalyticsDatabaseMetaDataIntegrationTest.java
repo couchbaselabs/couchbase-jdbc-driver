@@ -25,6 +25,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -103,8 +104,6 @@ class AnalyticsDatabaseMetaDataIntegrationTest extends BaseAnalyticsIntegrationT
   @Test
   void loadsSchemas() throws Exception {
     ResultSet resultSet = metaData.getSchemas();
-
-    System.err.println(resultSet);
 
     int numEntries = 0;
     while (resultSet.next()) {

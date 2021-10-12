@@ -31,6 +31,14 @@ public enum CouchbaseDriverProperty {
     null,
     true,
     "Username to connect to the database as"
+  ),
+  CATALOG_DATAVERSE_MODE(
+    "catalogDataverseMode",
+    "catalogSchema",
+    false,
+    "Defines how the catalog should be interpreted. With \"catalog\" both bucket and scope are used " +
+      "for the catalog, while with \"catalogSchema\" the bucket is used as a catalog and the scope as the schema.",
+    new String[] { "catalog", "catalogSchema" }
   )
   ;
 

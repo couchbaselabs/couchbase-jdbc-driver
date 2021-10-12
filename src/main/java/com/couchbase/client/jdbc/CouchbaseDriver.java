@@ -135,6 +135,18 @@ public final class CouchbaseDriver implements Driver {
     String hostname = components.hostname();
     Properties merged = mergeUrlArgs(url, info);
 
+    String catalog = components.catalog();
+    String schema = null;
+
+    if ("catalog".equals(merged.get(CouchbaseDriverProperty.CATALOG_DATAVERSE_MODE.getName()))) {
+      if (components.schema() != null) {
+        catalog = catalog + "/" + components.schema();
+      }
+    } else {
+      // If not specified, "catalogSchema" is the default.
+      schema = components.schema();
+    }
+
     // if (url.startsWith(QUERY_URL_PREFIX)) {
     //   return new QueryDataSource().getConnection();
     // } else
@@ -143,8 +155,8 @@ public final class CouchbaseDriver implements Driver {
         .builder()
         .hostname(hostname)
         .properties(merged)
-        .catalog(components.catalog())
-        .schema(components.schema())
+        .catalog(catalog)
+        .schema(schema)
         .url(url)
         .build()
         .getConnection();
