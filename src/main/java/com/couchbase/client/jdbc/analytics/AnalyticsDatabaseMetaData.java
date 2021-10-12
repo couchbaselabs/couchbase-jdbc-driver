@@ -160,7 +160,10 @@ public class AnalyticsDatabaseMetaData implements DatabaseMetaData {
 
   @Override
   public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types) throws SQLException {
-    return connection.createStatement().executeQuery(AnalyticsMetaDataQueries.tablesQuery(catalog, schemaPattern, tableNamePattern, types));
+    return connection.createStatement().executeQuery(AnalyticsMetaDataQueries.tablesQuery(
+      connection.catalogDataverseMode(), connection.catalogIncludesSchemaless(), catalog, schemaPattern,
+      tableNamePattern, types
+    ));
   }
 
   @Override
@@ -200,15 +203,23 @@ public class AnalyticsDatabaseMetaData implements DatabaseMetaData {
   }
 
   @Override
-  public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern) throws SQLException {
+  public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern)
+    throws SQLException {
     return connection.createStatement().executeQuery(
-      AnalyticsMetaDataQueries.columnsQuery(catalog, schemaPattern, tableNamePattern, columnNamePattern)
+      AnalyticsMetaDataQueries.columnsQuery(connection.catalogDataverseMode(), catalog, schemaPattern,
+        tableNamePattern, columnNamePattern)
     );
   }
 
   @Override
   public ResultSet getPrimaryKeys(String catalog, String schema, String table) throws SQLException {
-    return connection.createStatement().executeQuery(AnalyticsMetaDataQueries.primaryKeysQuery(catalog, schema, table));
+    return connection.createStatement().executeQuery(AnalyticsMetaDataQueries.primaryKeysQuery(
+      connection.catalogDataverseMode(),
+      connection.catalogIncludesSchemaless(),
+      catalog,
+      schema,
+      table)
+    );
   }
 
   @Override
@@ -259,17 +270,26 @@ public class AnalyticsDatabaseMetaData implements DatabaseMetaData {
 
   @Override
   public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
-    return connection.createStatement().empty();
+    return connection.createStatement().executeQuery(
+      AnalyticsMetaDataQueries.importedKeysQuery(connection.catalogDataverseMode(), connection.catalogIncludesSchemaless(),
+        catalog, schema, table)
+    );
   }
 
   @Override
   public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException {
-    return connection.createStatement().empty();
+    return connection.createStatement().executeQuery(
+      AnalyticsMetaDataQueries.exportedKeysQuery(connection.catalogDataverseMode(), connection.catalogIncludesSchemaless(),
+        catalog, schema, table)
+    );
   }
 
   @Override
   public ResultSet getCrossReference(String parentCatalog, String parentSchema, String parentTable, String foreignCatalog, String foreignSchema, String foreignTable) throws SQLException {
-    return connection.createStatement().empty();
+    return connection.createStatement().executeQuery(
+      AnalyticsMetaDataQueries.crossReferenceQuery(connection.catalogDataverseMode(), connection.catalogIncludesSchemaless(),
+        parentCatalog, parentSchema, parentTable, foreignCatalog, foreignSchema, foreignTable)
+    );
   }
 
   @Override
