@@ -16,10 +16,14 @@
 
 package com.couchbase.client.jdbc.analytics;
 
+import com.couchbase.client.core.endpoint.http.CoreHttpResponse;
 import com.couchbase.client.java.analytics.AnalyticsOptions;
 import com.couchbase.client.java.analytics.AnalyticsResult;
 import com.couchbase.client.java.json.JsonArray;
+import com.couchbase.client.java.json.JsonObject;
 import com.couchbase.client.jdbc.sdk.ConnectionCoordinate;
+import com.couchbase.client.jdbc.sdk.ConnectionHandle;
+import com.couchbase.client.jdbc.sdk.ConnectionManager;
 import com.couchbase.client.jdbc.util.Exceptions;
 
 import java.io.InputStream;
@@ -43,6 +47,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 
 import static com.couchbase.client.java.analytics.AnalyticsOptions.analyticsOptions;
@@ -51,27 +56,35 @@ public class AnalyticsPreparedStatement extends AnalyticsStatement implements Pr
 
   private final String sql;
   private final List<Object> args;
+  private final AnalyticsConnection connection;
+  private final List<AnalyticsColumn> columns;
 
   AnalyticsPreparedStatement(AnalyticsConnection connection, String sql, ConnectionCoordinate coordinate,
-                             String catalog, String schema) {
+                             String catalog, String schema) throws SQLException {
     super(connection, coordinate, catalog, schema);
     this.sql = sql;
+    this.connection = connection;
 
-    CompilationInfo compilationInfo = precompileQuery(sql);
+    AnalyticsCompilationInfo compilationInfo = precompileQuery(sql);
     this.args = Arrays.asList(new Object[compilationInfo.parameterCount()]);
+    this.columns = compilationInfo.columns();
   }
 
-  private CompilationInfo precompileQuery(String sql) {
-    AnalyticsResult analyticsResult = performAnalyticsQuery(sql, analyticsOptions()
-      .raw("compile-only", true)
-      .raw("logical-plan", true)
-      .raw("plan-format", "string")
-    );
+  private AnalyticsCompilationInfo precompileQuery(String sql) throws SQLException {
+    ConnectionHandle handle = ConnectionManager.INSTANCE.handle(connection.connectionCoordinate());
 
-    System.err.println(analyticsResult.rowsAsObject());
-    System.err.println(analyticsResult.metaData());
+    byte[] content = JsonObject.create()
+      .put("compile-only", true)
+      .put("plan-format", "string")
+      .put("client-type", "jdbc")
+      .put("mode", "deferred")
+      .put("signature", true)
+      .put("statement", sql)
+      .toBytes();
 
-    return new CompilationInfo(0);
+    CoreHttpResponse coreResponse = handle.rawAnalyticsQuery(Collections.emptyMap(), content);
+    JsonObject decoded = JsonObject.fromJson(coreResponse.content());
+    return new AnalyticsCompilationInfo(decoded.getObject("signature"), decoded.getObject("plans"));
   }
 
   @Override
@@ -91,15 +104,12 @@ public class AnalyticsPreparedStatement extends AnalyticsStatement implements Pr
 
   @Override
   public ResultSetMetaData getMetaData() throws SQLException {
-    // TODO
-
-    return null;
+    return new AnalyticsResultSetMetaData(this, columns);
   }
 
   @Override
   public ParameterMetaData getParameterMetaData() throws SQLException {
-    // TODO
-    return null;
+    return new AnalyticsParameterMetaData(this, args.size());
   }
 
   @Override
@@ -365,18 +375,6 @@ public class AnalyticsPreparedStatement extends AnalyticsStatement implements Pr
   @Override
   public void setNClob(int parameterIndex, Reader reader) throws SQLException {
     throw Exceptions.unsupported();
-  }
-
-  static class CompilationInfo {
-    private final int parameterCount;
-
-    public CompilationInfo(int parameterCount) {
-      this.parameterCount = parameterCount;
-    }
-
-    public int parameterCount() {
-      return parameterCount;
-    }
   }
 
 }

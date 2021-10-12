@@ -19,6 +19,7 @@ package com.couchbase.client.jdbc.sdk;
 import com.couchbase.client.core.deps.com.fasterxml.jackson.databind.JsonNode;
 import com.couchbase.client.core.endpoint.http.CoreCommonOptions;
 import com.couchbase.client.core.endpoint.http.CoreHttpClient;
+import com.couchbase.client.core.endpoint.http.CoreHttpRequest;
 import com.couchbase.client.core.endpoint.http.CoreHttpResponse;
 import com.couchbase.client.core.json.Mapper;
 import com.couchbase.client.core.msg.RequestTarget;
@@ -29,6 +30,7 @@ import com.couchbase.client.java.query.QueryOptions;
 import com.couchbase.client.java.query.QueryResult;
 
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import static com.couchbase.client.core.endpoint.http.CoreHttpPath.path;
@@ -85,6 +87,33 @@ public class ConnectionHandle {
       return root.get("implementationVersion").asText();
     } catch (Exception e) {
       throw new SQLException("Failed to fetch cluster version", e);
+    }
+  }
+
+  /**
+   * Sends a raw analytics query, allows to be used where the regular API does not suffice.
+   * <p>
+   * It should really only be used if the primary query API cannot be used for some reason.
+   *
+   * @return the core response to use.
+   */
+  public CoreHttpResponse rawAnalyticsQuery(Map<String, Object> headers, byte[] content) throws SQLException {
+    CoreHttpClient client = cluster.core().httpClient(RequestTarget.analytics());
+
+    CoreHttpRequest.Builder builder = client.post(path("/analytics/service"), CoreCommonOptions.DEFAULT);
+    if (content != null) {
+      builder = builder.json(content);
+    }
+    if (headers != null) {
+      for (Map.Entry<String, Object> header : headers.entrySet()) {
+        builder = builder.header(header.getKey(), header.getValue());
+      }
+    }
+
+    try {
+      return builder.build().exec(cluster.core()).get();
+    } catch (Exception ex) {
+      throw new SQLException("Failed to perform raw analytics query", ex);
     }
   }
 

@@ -19,6 +19,7 @@ package com.couchbase.client.jdbc.analytics;
 import com.couchbase.client.java.analytics.AnalyticsOptions;
 import com.couchbase.client.java.analytics.AnalyticsResult;
 import com.couchbase.client.java.codec.TypeRef;
+import com.couchbase.client.java.json.JsonObject;
 import com.couchbase.client.jdbc.common.CommonResultSet;
 import com.couchbase.client.jdbc.sdk.ConnectionCoordinate;
 import com.couchbase.client.jdbc.sdk.ConnectionHandle;
@@ -54,11 +55,21 @@ public class AnalyticsStatement implements Statement {
   }
 
   ResultSet empty() throws SQLException {
-    return new AnalyticsResultSet(this, 0, Collections.emptyList());
+    return new AnalyticsResultSet(
+      new AnalyticsResultSetMetaData(this, Collections.emptyList()),
+      this,
+      0,
+      Collections.emptyList()
+    );
   }
 
   ResultSet fromData(final List<LinkedHashMap<String, Object>> rows) throws SQLException {
-    return new AnalyticsResultSet(this, 0, rows);
+    return new AnalyticsResultSet(
+      new AnalyticsResultSetMetaData(this, Collections.emptyList()),
+      this,
+      0,
+      rows
+    );
   }
 
   @Override
@@ -79,13 +90,18 @@ public class AnalyticsStatement implements Statement {
       sql,
       options
         .raw("client-type", "jdbc")
-        //.raw("mode", "deferred")
+        .raw("signature", true)
         .timeout(queryTimeout)
     );
   }
 
-  protected AnalyticsResultSet buildResultSet(AnalyticsResult result) {
+  protected AnalyticsResultSet buildResultSet(AnalyticsResult result) throws SQLException {
+    JsonObject signature = result.metaData().signature().orElse(null);
+    JsonObject plans = result.metaData().plans().orElse(null);
+    AnalyticsCompilationInfo compilationInfo = new AnalyticsCompilationInfo(signature, plans);
+
     return new AnalyticsResultSet(
+      new AnalyticsResultSetMetaData(this, compilationInfo.columns()),
       this,
       maxRows,
       result.rowsAs(new TypeRef<LinkedHashMap<String, Object>>() {})

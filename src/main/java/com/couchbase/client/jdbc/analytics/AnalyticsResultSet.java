@@ -42,8 +42,8 @@ public class AnalyticsResultSet extends CommonResultSet {
   private final AnalyticsStatement statement;
   private final int maxRows;
 
-  AnalyticsResultSet(final AnalyticsStatement statement, final int maxRows, final List<LinkedHashMap<String, Object>> rows) {
-    super(new AnalyticsResultSetMetaData(), rows);
+  AnalyticsResultSet(final AnalyticsResultSetMetaData metaData, final AnalyticsStatement statement, final int maxRows, final List<LinkedHashMap<String, Object>> rows) {
+    super(metaData, rows);
     this.statement = statement;
     this.maxRows = maxRows;
   }
