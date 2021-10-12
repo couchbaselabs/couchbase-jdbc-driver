@@ -67,7 +67,7 @@ public abstract class CommonResultSet implements ResultSet {
   }
 
   private String labelForIndex(int columnIndex) {
-    return labelIndexes.get(columnIndex);
+    return labelIndexes.get(columnIndex - 1);
   }
 
   private <T> T wrapDecode(String columnLabel, Function<String, T> function) throws SQLException {

@@ -38,8 +38,23 @@ import java.util.concurrent.Executor;
 
 public class AnalyticsConnection extends CommonConnection {
 
-  public AnalyticsConnection(final ConnectionCoordinate coordinate, String catalog, String schema) {
+  private final boolean catalogIncludesSchemaless;
+  private final AnalyticsCatalogDataverseMode catalogDataverseMode;
+
+  public AnalyticsConnection(final ConnectionCoordinate coordinate, String catalog, String schema,
+                             boolean catalogIncludesSchemaless, AnalyticsCatalogDataverseMode catalogDataverseMode) {
     super(coordinate, catalog, schema);
+
+    this.catalogIncludesSchemaless = catalogIncludesSchemaless;
+    this.catalogDataverseMode = catalogDataverseMode;
+  }
+
+  boolean catalogIncludesSchemaless() {
+    return catalogIncludesSchemaless;
+  }
+
+  AnalyticsCatalogDataverseMode catalogDataverseMode() {
+    return catalogDataverseMode;
   }
 
   @Override

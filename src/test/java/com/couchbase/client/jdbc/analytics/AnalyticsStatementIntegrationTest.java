@@ -48,7 +48,7 @@ class AnalyticsStatementIntegrationTest extends BaseAnalyticsIntegrationTest {
    ResultSet resultSet = connection.createStatement().executeQuery("select \"Michael\" as firstname");
    resultSet.next();
    assertEquals("Michael", resultSet.getString("firstname"));
-   assertEquals("Michael", resultSet.getString(0));
+   assertEquals("Michael", resultSet.getString(1));
  }
 
   @Test
@@ -62,7 +62,7 @@ class AnalyticsStatementIntegrationTest extends BaseAnalyticsIntegrationTest {
     ResultSet resultSet = statement.getResultSet();
     resultSet.next();
     assertEquals("Michael", resultSet.getString("firstname"));
-    assertEquals("Michael", resultSet.getString(0));
+    assertEquals("Michael", resultSet.getString(1));
   }
 
 }

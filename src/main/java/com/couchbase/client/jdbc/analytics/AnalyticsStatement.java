@@ -63,9 +63,9 @@ public class AnalyticsStatement implements Statement {
     );
   }
 
-  ResultSet fromData(final List<LinkedHashMap<String, Object>> rows) throws SQLException {
+  ResultSet fromData(final List<LinkedHashMap<String, Object>> rows, List<AnalyticsColumn> columns) throws SQLException {
     return new AnalyticsResultSet(
-      new AnalyticsResultSetMetaData(this, Collections.emptyList()),
+      new AnalyticsResultSetMetaData(this, columns),
       this,
       0,
       rows

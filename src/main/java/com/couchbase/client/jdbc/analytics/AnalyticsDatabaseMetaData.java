@@ -25,6 +25,9 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.RowIdLifetime;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class AnalyticsDatabaseMetaData implements DatabaseMetaData {
 
@@ -162,22 +165,38 @@ public class AnalyticsDatabaseMetaData implements DatabaseMetaData {
 
   @Override
   public ResultSet getSchemas() throws SQLException {
-    return getSchemas(null, null);
+    return connection.createStatement().executeQuery(
+      AnalyticsMetaDataQueries.schemasQuery(
+        connection.catalogDataverseMode(),
+        connection.getCatalog(),
+        null)
+    );
   }
 
   @Override
   public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
-    return connection.createStatement().executeQuery(AnalyticsMetaDataQueries.schemasQuery(catalog, schemaPattern));
+    return connection.createStatement().executeQuery(
+      AnalyticsMetaDataQueries.schemasQuery(connection.catalogDataverseMode(), catalog, schemaPattern)
+    );
   }
 
   @Override
   public ResultSet getCatalogs() throws SQLException {
-    return connection.createStatement().executeQuery(AnalyticsMetaDataQueries.catalogsQuery());
+    return connection.createStatement().executeQuery(
+      AnalyticsMetaDataQueries.catalogsQuery(connection.catalogDataverseMode())
+    );
   }
 
   @Override
   public ResultSet getTableTypes() throws SQLException {
-    return connection.createStatement().fromData(AnalyticsMetaDataQueries.tableTypes());
+    List<AnalyticsColumn> columns = Collections.singletonList(
+      new AnalyticsColumn("TABLE_TYPE", AnalyticsDataType.STRING, false)
+    );
+
+    return connection.createStatement().fromData(AnalyticsMetaDataQueries.tableTypes(
+      connection.catalogIncludesSchemaless()),
+      columns
+    );
   }
 
   @Override
@@ -194,7 +213,28 @@ public class AnalyticsDatabaseMetaData implements DatabaseMetaData {
 
   @Override
   public ResultSet getTypeInfo() throws SQLException {
-    return connection.createStatement().fromData(AnalyticsMetaDataQueries.typeInfo());
+    List<AnalyticsColumn> columns = Arrays.asList(
+      new AnalyticsColumn("TYPE_NAME", AnalyticsDataType.STRING, false),
+      new AnalyticsColumn("DATA_TYPE", AnalyticsDataType.INTEGER, false),
+      new AnalyticsColumn("PRECISION", AnalyticsDataType.INTEGER, true),
+      new AnalyticsColumn("LITERAL_PREFIX", AnalyticsDataType.STRING, true),
+      new AnalyticsColumn("LITERAL_SUFFIX", AnalyticsDataType.STRING, true),
+      new AnalyticsColumn("CREATE_PARAMS", AnalyticsDataType.STRING, true),
+      new AnalyticsColumn("NULLABLE", AnalyticsDataType.SMALLINT, true),
+      new AnalyticsColumn("CASE_SENSITIVE", AnalyticsDataType.BOOLEAN, true),
+      new AnalyticsColumn("SEARCHABLE", AnalyticsDataType.SMALLINT, true),
+      new AnalyticsColumn("UNSIGNED_ATTRIBUTE", AnalyticsDataType.BOOLEAN, true),
+      new AnalyticsColumn("FIXED_PREC_SCALE", AnalyticsDataType.BOOLEAN, true),
+      new AnalyticsColumn("AUTO_INCREMENT", AnalyticsDataType.BOOLEAN, true),
+      new AnalyticsColumn("LOCAL_TYPE_NAME", AnalyticsDataType.STRING, true),
+      new AnalyticsColumn("MINIMUM_SCALE", AnalyticsDataType.SMALLINT, true),
+      new AnalyticsColumn("MAXIMUM_SCALE", AnalyticsDataType.SMALLINT, true),
+      new AnalyticsColumn("SQL_DATA_TYPE", AnalyticsDataType.INTEGER, true),
+      new AnalyticsColumn("SQL_DATETIME_SUB", AnalyticsDataType.INTEGER, true),
+      new AnalyticsColumn("NUM_PREC_RADIX", AnalyticsDataType.INTEGER, true)
+    );
+
+    return connection.createStatement().fromData(AnalyticsMetaDataQueries.typeInfo(), columns);
   }
 
   @Override

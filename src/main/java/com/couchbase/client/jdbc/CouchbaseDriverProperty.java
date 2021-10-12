@@ -39,6 +39,12 @@ public enum CouchbaseDriverProperty {
     "Defines how the catalog should be interpreted. With \"catalog\" both bucket and scope are used " +
       "for the catalog, while with \"catalogSchema\" the bucket is used as a catalog and the scope as the schema.",
     new String[] { "catalog", "catalogSchema" }
+  ),
+  CATALOG_INCLUDE_SCHEMALESS(
+    "catalogIncludesSchemaless",
+    "false",
+    false,
+    "If the Catalog API should also include schemaless catalogs."
   )
   ;
 

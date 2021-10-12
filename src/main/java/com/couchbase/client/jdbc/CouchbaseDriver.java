@@ -138,7 +138,8 @@ public final class CouchbaseDriver implements Driver {
     String catalog = components.catalog();
     String schema = null;
 
-    if ("catalog".equals(merged.get(CouchbaseDriverProperty.CATALOG_DATAVERSE_MODE.getName()))) {
+
+    if ("catalog".equals(CouchbaseDriverProperty.CATALOG_DATAVERSE_MODE.get(merged))) {
       if (components.schema() != null) {
         catalog = catalog + "/" + components.schema();
       }

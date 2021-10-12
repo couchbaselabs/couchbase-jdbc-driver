@@ -36,31 +36,59 @@ public class AnalyticsMetaDataQueries {
 
   private AnalyticsMetaDataQueries() {}
 
-  static String catalogsQuery() {
-    return "select TABLE_CAT " +
-      "from Metadata.`Dataverse` " +
-      "let name = decode_dataverse_name(DataverseName), " +
-      "TABLE_CAT = name[0] " +
-      "where array_length(name) between 1 and 2 " +
-      "group by TABLE_CAT " +
-      "order by TABLE_CAT";
+  static String catalogsQuery(AnalyticsCatalogDataverseMode mode) {
+    StringBuilder sql = new StringBuilder();
+
+    sql.append("select TABLE_CAT ");
+    sql.append("from Metadata.`Dataverse` ");
+    switch (mode) {
+      case CATALOG:
+        sql.append("let TABLE_CAT = DataverseName ");
+        break;
+      case CATALOG_SCHEMA:
+        sql.append("let name = decode_dataverse_name(DataverseName), ");
+        sql.append("TABLE_CAT = name[0] ");
+        sql.append("where (array_length(name) between 1 and 2) ");
+        sql.append("group by TABLE_CAT ");
+        break;
+      default:
+        throw new IllegalStateException();
+    }
+
+    sql.append("order by TABLE_CAT");
+
+    return sql.toString();
   }
 
-  static String schemasQuery(String catalog, String schemaPattern) {
-    StringBuilder sql = new StringBuilder(512);
+  static String schemasQuery(AnalyticsCatalogDataverseMode mode, String catalog, String schemaPattern) {
+    StringBuilder sql = new StringBuilder();
+
     sql.append("select TABLE_SCHEM, TABLE_CATALOG ");
     sql.append("from Metadata.`Dataverse` ");
-    sql.append("let name = decode_dataverse_name(DataverseName), ");
-    sql.append("TABLE_CATALOG = name[0], ");
-    sql.append("TABLE_SCHEM = case array_length(name) when 1 then null else name[1] end ");
-    sql.append("where array_length(name) between 1 and 2 ");
+    sql.append("let ");
+    switch (mode) {
+      case CATALOG:
+        sql.append("TABLE_CATALOG = DataverseName, ");
+        sql.append("TABLE_SCHEM = null ");
+        sql.append("where true ");
+        break;
+      case CATALOG_SCHEMA:
+        sql.append("name = decode_dataverse_name(DataverseName), ");
+        sql.append("TABLE_CATALOG = name[0], ");
+        sql.append("TABLE_SCHEM = case array_length(name) when 1 then null else name[1] end ");
+        sql.append("where (array_length(name) between 1 and 2) ");
+        break;
+      default:
+        throw new IllegalStateException();
+    }
     if (catalog != null) {
-      sql.append("and TABLE_CATALOG = \"").append(catalog).append("\" ");
+      sql.append("and (TABLE_CATALOG = \"").append(catalog).append("\") ");
     }
     if (schemaPattern != null) {
-      sql.append("and if_null(TABLE_SCHEM, '') like \"").append(schemaPattern).append("\" ");
+      sql.append("and (if_null(TABLE_SCHEM, '') like \"").append(schemaPattern).append("\") ");
     }
     sql.append("order by TABLE_CATALOG, TABLE_SCHEM");
+
     return sql.toString();
   }
 
@@ -195,13 +223,17 @@ public class AnalyticsMetaDataQueries {
     return sql.toString();
   }
 
-  static List<LinkedHashMap<String, Object>> tableTypes() {
-    return Stream.of(
-      AnalyticsMetaDataQueries.getDatasetTerm(true),
-      AnalyticsMetaDataQueries.getDatasetTerm(false),
-      AnalyticsMetaDataQueries.getViewTerm(true),
-      AnalyticsMetaDataQueries.getViewTerm(false)
-    ).map(v -> {
+  static List<LinkedHashMap<String, Object>> tableTypes(boolean includeSchemaless) {
+    List<String> types = new ArrayList<>();
+    types.add(AnalyticsMetaDataQueries.getDatasetTerm(true));
+    types.add(AnalyticsMetaDataQueries.getViewTerm(true));
+
+    if (includeSchemaless) {
+      types.add(AnalyticsMetaDataQueries.getDatasetTerm(false));
+      types.add(AnalyticsMetaDataQueries.getViewTerm(false));
+    }
+
+    return types.stream().map(v -> {
       LinkedHashMap<String, Object> m = new LinkedHashMap<>();
       m.put("TABLE_TYPE", v);
       return m;

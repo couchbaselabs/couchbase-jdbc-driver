@@ -60,7 +60,9 @@ public class AnalyticsDataSource extends CommonDataSource {
     return new AnalyticsConnection(
       ConnectionCoordinate.create(buildUrl(), hostname, username, password, properties),
       catalog,
-      schema
+      schema,
+      Boolean.parseBoolean(CouchbaseDriverProperty.CATALOG_INCLUDE_SCHEMALESS.get(properties)),
+      AnalyticsCatalogDataverseMode.fromString(CouchbaseDriverProperty.CATALOG_DATAVERSE_MODE.get(properties))
     );
   }
 

@@ -113,6 +113,9 @@ class AnalyticsDatabaseMetaDataIntegrationTest extends BaseAnalyticsIntegrationT
     assertTrue(numEntries > 0);
   }
 
+  /**
+   * This test also makes sure that no schemaless table types are included by default.
+   */
   @Test
   void listsTableTypes() throws Exception {
     ResultSet resultSet = metaData.getTableTypes();
@@ -121,6 +124,7 @@ class AnalyticsDatabaseMetaDataIntegrationTest extends BaseAnalyticsIntegrationT
     while (resultSet.next()) {
       assertNotNull(resultSet.getString("TABLE_TYPE"));
       assertFalse(resultSet.getString("TABLE_TYPE").isEmpty());
+      assertFalse(resultSet.getString("TABLE_TYPE").contains("SCHEMALESS"));
       numEntries++;
     }
     assertTrue(numEntries > 0);
