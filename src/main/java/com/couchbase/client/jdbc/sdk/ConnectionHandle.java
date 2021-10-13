@@ -84,7 +84,8 @@ public class ConnectionHandle {
    *
    * @return the core response to use.
    */
-  public CoreHttpResponse rawAnalyticsQuery(HttpMethod method, String path, Map<String, Object> headers, byte[] content) throws SQLException {
+  public CoreHttpResponse rawAnalyticsQuery(HttpMethod method, String path, Map<String, Object> headers, byte[] content)
+    throws SQLException {
     CoreHttpClient client = cluster.core().httpClient(RequestTarget.analytics());
 
     CoreCommonOptions options = CoreCommonOptions.DEFAULT;

@@ -46,7 +46,7 @@ public class AnalyticsProtocol extends ADBProtocolBase {
 
   private static final String QUERY_SERVICE_ENDPOINT_PATH = "/query/service";
   private static final String QUERY_RESULT_ENDPOINT_PATH = "/query/service/result";
-  private static final String ACTIVE_REQUESTS_ENDPOINT_PATH = "/admin/requests/running";
+  private static final String ACTIVE_REQUESTS_ENDPOINT_PATH = "/analytics/admin/active_requests";
   private static final String PING_ENDPOINT_PATH = "/admin/ping";
 
   private final ConnectionHandle connectionHandle;
