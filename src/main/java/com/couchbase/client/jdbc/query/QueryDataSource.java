@@ -25,12 +25,12 @@ public class QueryDataSource extends CommonDataSource {
 
   @Override
   public Connection getConnection() throws SQLException {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public Connection getConnection(String username, String password) throws SQLException {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override

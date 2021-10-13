@@ -26,8 +26,6 @@ import com.couchbase.client.core.msg.RequestTarget;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.analytics.AnalyticsOptions;
 import com.couchbase.client.java.analytics.AnalyticsResult;
-import com.couchbase.client.java.query.QueryOptions;
-import com.couchbase.client.java.query.QueryResult;
 
 import java.sql.SQLException;
 import java.util.Map;
@@ -44,17 +42,6 @@ public class ConnectionHandle {
 
   ConnectionHandle(Cluster cluster) {
     this.cluster = cluster;
-  }
-
-  /**
-   * Run a N1QL query against the cluster.
-   *
-   * @param statement the statement to execute.
-   * @param options the query options.
-   * @return the {@link QueryResult} in a blocking fashion.
-   */
-  public QueryResult query(final String statement, final QueryOptions options) {
-    return cluster.query(statement, options);
   }
 
   /**
@@ -97,13 +84,29 @@ public class ConnectionHandle {
    *
    * @return the core response to use.
    */
-  public CoreHttpResponse rawAnalyticsQuery(Map<String, Object> headers, byte[] content) throws SQLException {
+  public CoreHttpResponse rawAnalyticsQuery(HttpMethod method, String path, Map<String, Object> headers, byte[] content) throws SQLException {
     CoreHttpClient client = cluster.core().httpClient(RequestTarget.analytics());
 
-    CoreHttpRequest.Builder builder = client.post(path("/analytics/service"), CoreCommonOptions.DEFAULT);
-    if (content != null) {
-      builder = builder.json(content);
+    CoreCommonOptions options = CoreCommonOptions.DEFAULT;
+
+    CoreHttpRequest.Builder builder;
+    switch (method) {
+      case GET:
+        builder = client.get(path(path), options);
+        break;
+      case DELETE:
+        builder = client.delete(path(path), options);
+        break;
+      case POST:
+        builder = client.post(path(path), options);
+        if (content != null) {
+          builder = builder.json(content);
+        }
+        break;
+      default:
+        throw new IllegalStateException("Unsupported http verb: " + method);
     }
+
     if (headers != null) {
       for (Map.Entry<String, Object> header : headers.entrySet()) {
         builder = builder.header(header.getKey(), header.getValue());
@@ -115,6 +118,13 @@ public class ConnectionHandle {
     } catch (Exception ex) {
       throw new SQLException("Failed to perform raw analytics query", ex);
     }
+
+  }
+
+  public enum HttpMethod {
+    GET,
+    POST,
+    DELETE
   }
 
 }

@@ -19,7 +19,7 @@ package com.couchbase.client.jdbc.analytics;
 import com.couchbase.client.jdbc.CouchbaseDriver;
 import com.couchbase.client.jdbc.CouchbaseDriverProperty;
 import com.couchbase.client.jdbc.common.CommonDataSource;
-import com.couchbase.client.jdbc.sdk.ConnectionCoordinate;
+import org.apache.asterix.jdbc.core.ADBDriverProperty;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -35,6 +35,8 @@ public class AnalyticsDataSource extends CommonDataSource {
   private final String catalog;
   private final String schema;
 
+  private final AnalyticsDriver analyticsDriver;
+
   public static AnalyticsDataSource.Builder builder() {
     return new Builder();
   }
@@ -45,6 +47,8 @@ public class AnalyticsDataSource extends CommonDataSource {
     this.url = builder.url;
     this.catalog = builder.catalog;
     this.schema = builder.schema;
+
+    this.analyticsDriver = new AnalyticsDriver(properties, "asterixdb:", 0);
   }
 
   @Override
@@ -57,20 +61,18 @@ public class AnalyticsDataSource extends CommonDataSource {
 
   @Override
   public Connection getConnection(String username, String password) throws SQLException {
-    return new AnalyticsConnection(
-      ConnectionCoordinate.create(buildUrl(), hostname, username, password, properties),
-      catalog,
-      schema,
-      Boolean.parseBoolean(CouchbaseDriverProperty.CATALOG_INCLUDE_SCHEMALESS.get(properties)),
-      AnalyticsCatalogDataverseMode.fromString(CouchbaseDriverProperty.CATALOG_DATAVERSE_MODE.get(properties))
-    );
-  }
+    String url = "jdbc:asterixdb://"  + hostname + "/" + catalog;
+    if (schema != null && !schema.isEmpty()) {
+      url = url + "/" + schema;
+    }
 
-  /**
-   * Return the URL or build one if not provided by the caller.
-   */
-  String buildUrl() {
-    return url == null ? CouchbaseDriver.ANALYTICS_URL_PREFIX + "://" + hostname : url;
+    Properties properties = new Properties();
+    properties.setProperty(ADBDriverProperty.Common.USER.getPropertyName(), username);
+    properties.setProperty(ADBDriverProperty.Common.PASSWORD.getPropertyName(), password);
+
+    // TODO: proxy more properties
+
+    return analyticsDriver.connect(url, properties);
   }
 
   @Override

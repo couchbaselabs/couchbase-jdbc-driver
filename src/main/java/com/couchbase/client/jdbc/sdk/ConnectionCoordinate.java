@@ -29,26 +29,18 @@ import static com.couchbase.client.core.util.Validators.notNullOrEmpty;
  */
 public class ConnectionCoordinate {
 
-  private final String url;
   private final String connectionString;
   private final Authenticator authenticator;
   private final Properties properties;
-  private final String username;
 
-  public static ConnectionCoordinate create(String url, String connectionString, String username, String password, Properties properties) {
-    return new ConnectionCoordinate(url, connectionString, PasswordAuthenticator.create(username, password), username, properties);
+  public static ConnectionCoordinate create(String connectionString, String username, String password, Properties properties) {
+    return new ConnectionCoordinate(connectionString, PasswordAuthenticator.create(username, password), username, properties);
   }
 
-  private ConnectionCoordinate(String url, String connectionString, Authenticator authenticator, String username, Properties properties) {
-    this.url = notNullOrEmpty(url, "URL");
-    this.username = username;
+  private ConnectionCoordinate(String connectionString, Authenticator authenticator, String username, Properties properties) {
     this.connectionString = notNullOrEmpty(connectionString, "ConnectionString");
     this.authenticator = notNull(authenticator, "Authenticator");
     this.properties = properties == null ? new Properties() : properties;
-  }
-
-  public String url() {
-    return url;
   }
 
   public String connectionString() {
@@ -61,10 +53,6 @@ public class ConnectionCoordinate {
 
   public Properties properties() {
     return properties;
-  }
-
-  public String username() {
-    return username;
   }
 
 }

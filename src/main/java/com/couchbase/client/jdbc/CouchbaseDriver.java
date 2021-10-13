@@ -68,7 +68,9 @@ public final class CouchbaseDriver implements Driver {
   private static final Logger LOGGER = Logger.getLogger(CouchbaseDriver.class.getCanonicalName());
 
   public static final String QUERY_URL_PREFIX = "jdbc:couchbase:query";
-  public static final String ANALYTICS_URL_PREFIX = "jdbc:couchbase:analytics";
+
+  public static final String ANALYTICS_SCHEME = "couchbase:analytics";
+  public static final String ANALYTICS_URL_PREFIX = "jdbc:" + ANALYTICS_SCHEME;
 
   public static final AtomicReference<String> DRIVER_VERSION = new AtomicReference<>("");
   public static final AtomicInteger DRIVER_MAJOR_VERSION = new AtomicInteger(0);

@@ -47,8 +47,8 @@ class AnalyticsConnectionIntegrationTest extends BaseAnalyticsIntegrationTest {
   @Test
   void allowsSettingCatalogAndSchema() throws Exception {
     Connection connection = DriverManager.getConnection("jdbc:couchbase:analytics://" + hostname() + "/foo/bar", username(), password());
-    assertEquals("foo", connection.getCatalog());
-    assertEquals("bar", connection.getSchema());
+    assertEquals("foo/bar", connection.getCatalog());
+    assertNull(connection.getSchema());
   }
 
   @Test
