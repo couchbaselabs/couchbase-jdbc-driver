@@ -18,23 +18,27 @@ package com.couchbase.client.jdbc.analytics;
 
 import com.couchbase.client.jdbc.CouchbaseDriver;
 import com.couchbase.client.jdbc.CouchbaseDriverProperty;
-import com.couchbase.client.jdbc.common.CommonDataSource;
 import org.apache.asterix.jdbc.core.ADBDriverProperty;
 
+import javax.sql.DataSource;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.logging.Logger;
 
-public class AnalyticsDataSource extends CommonDataSource {
+/**
+ * The {@link AnalyticsDataSource} can be used to programmatically construct a JDBC driver which allows to interact
+ * with Couchbase Analytics.
+ */
+public class AnalyticsDataSource implements DataSource {
 
   public static final String DEFAULT_CATALOG = "Default";
 
   private final String hostname;
   private final Properties properties;
-  private final String url;
   private final String catalog;
   private final String schema;
-
   private final AnalyticsDriver analyticsDriver;
 
   public static AnalyticsDataSource.Builder builder() {
@@ -44,7 +48,6 @@ public class AnalyticsDataSource extends CommonDataSource {
   private AnalyticsDataSource(Builder builder) {
     this.hostname = builder.hostname;
     this.properties = builder.properties;
-    this.url = builder.url;
     this.catalog = builder.catalog;
     this.schema = builder.schema;
 
@@ -76,51 +79,78 @@ public class AnalyticsDataSource extends CommonDataSource {
   }
 
   @Override
-  public boolean isWrapperFor(Class<?> iface) {
-    return iface.isAssignableFrom(getClass());
+  public final boolean isWrapperFor(Class<?> iface) {
+    return iface.isInstance(this);
   }
 
   @Override
-  public <T> T unwrap(Class<T> iface) throws SQLException {
-    if (iface.isAssignableFrom(getClass())) {
-      return iface.cast(this);
+  public final <T> T unwrap(Class<T> iface) throws SQLException {
+    if (!iface.isInstance(this)) {
+      throw analyticsDriver.context().getErrorReporter().errorUnwrapTypeMismatch(iface);
     }
-    throw new SQLException("Cannot unwrap to " + iface.getName());
+    return iface.cast(this);
   }
 
+  @Override
+  public PrintWriter getLogWriter() {
+    return null; // We are not using a log writer.
+  }
+
+  @Override
+  public void setLogWriter(final PrintWriter out) {
+    // noop
+  }
+
+  @Override
+  public void setLoginTimeout(final int seconds) {
+    throw new UnsupportedOperationException("setLoginTimeout is not supported");
+  }
+
+  @Override
+  public int getLoginTimeout() {
+    return 0;
+  }
+
+  @Override
+  public Logger getParentLogger() {
+    return CouchbaseDriver.PARENT_LOGGER;
+  }
+
+  /**
+   * This Builder allows to customize the data source.
+   */
   public static class Builder {
 
-    private String url = null;
     private String hostname = CouchbaseDriver.DEFAULT_HOSTNAME;
     private String catalog = DEFAULT_CATALOG;
     private String schema = null;
     private Properties properties = new Properties();
 
-    public Builder url(String url) {
-      this.url = url;
-      return this;
-    }
-
-    public Builder hostname(String hostname) {
+    public Builder hostname(final String hostname) {
       this.hostname = hostname == null || hostname.isEmpty() ? CouchbaseDriver.DEFAULT_HOSTNAME : hostname;
       return this;
     }
 
-    public Builder catalog(String catalog) {
+    public Builder catalog(final String catalog) {
       this.catalog = catalog == null || catalog.isEmpty() ? DEFAULT_CATALOG : catalog;
       return this;
     }
 
-    public Builder schema(String schema) {
+    public Builder schema(final String schema) {
       this.schema = schema;
       return this;
     }
 
-    public Builder properties(Properties properties) {
+    public Builder properties(final Properties properties) {
       this.properties = properties == null ? new Properties() : properties;
       return this;
     }
 
+    /**
+     * Creates the {@link AnalyticsDataSource} from the custom properties.
+     *
+     * @return the created and ready-to-use data source.
+     */
     public AnalyticsDataSource build() {
       return new AnalyticsDataSource(this);
     }

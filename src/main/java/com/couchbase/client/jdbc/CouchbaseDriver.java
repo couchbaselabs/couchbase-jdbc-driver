@@ -54,18 +54,7 @@ public final class CouchbaseDriver implements Driver {
    */
   public static final String PRODUCT_NAME = "Couchbase Server";
 
-  /**
-   * The supported JDBC major version.
-   */
-  public static final int JDBC_MAJOR_VERSION = 4;
-
-  /**
-   * The supported JDBC minor version.
-   */
-  public static final int JDBC_MINOR_VERSION = 2;
-
-  private static final Logger PARENT_LOGGER = Logger.getLogger("com.couchbase.client.jdbc");
-  private static final Logger LOGGER = Logger.getLogger(CouchbaseDriver.class.getCanonicalName());
+  public static final Logger PARENT_LOGGER = Logger.getLogger("com.couchbase.client.jdbc");
 
   public static final String QUERY_URL_PREFIX = "jdbc:couchbase:query";
 
@@ -150,9 +139,6 @@ public final class CouchbaseDriver implements Driver {
       schema = components.schema();
     }
 
-    // if (url.startsWith(QUERY_URL_PREFIX)) {
-    //   return new QueryDataSource().getConnection();
-    // } else
     if (url.startsWith(ANALYTICS_URL_PREFIX)) {
       return AnalyticsDataSource
         .builder()
@@ -160,7 +146,6 @@ public final class CouchbaseDriver implements Driver {
         .properties(merged)
         .catalog(catalog)
         .schema(schema)
-        .url(url)
         .build()
         .getConnection();
     } else {
@@ -169,9 +154,8 @@ public final class CouchbaseDriver implements Driver {
   }
 
   @Override
-  public boolean acceptsURL(String url) throws SQLException {
+  public boolean acceptsURL(String url) {
     return url.startsWith(ANALYTICS_URL_PREFIX);
-    // return url.startsWith(QUERY_URL_PREFIX) || url.startsWith(ANALYTICS_URL_PREFIX);
   }
 
   @Override

@@ -21,24 +21,40 @@ import org.apache.asterix.jdbc.core.ADBDriverContext;
 import org.apache.asterix.jdbc.core.ADBDriverProperty;
 import org.apache.asterix.jdbc.core.ADBProtocolBase;
 
-import java.sql.SQLException;
+import java.net.URI;
 import java.util.Map;
 import java.util.Properties;
 
+/**
+ * The {@link AnalyticsDriver} provides the main entry point into the Analytics through the {@link ADBDriverBase}.
+ * <p>
+ * For the I/O components, see the {@link AnalyticsProtocol}.
+ */
 public class AnalyticsDriver extends ADBDriverBase {
 
   private final Properties properties;
 
-  public AnalyticsDriver(Properties properties, String driverScheme, int defaultApiPort) {
+  public AnalyticsDriver(final Properties properties, final String driverScheme, final int defaultApiPort) {
     super(driverScheme, defaultApiPort);
-
     this.properties = properties;
   }
 
   @Override
-  protected ADBProtocolBase createProtocol(String hostname, int port, Map<ADBDriverProperty, Object> map,
-                                           ADBDriverContext ctx) throws SQLException {
+  protected ADBProtocolBase createProtocol(final String hostname, final int port,
+                                           final Map<ADBDriverProperty, Object> map, final ADBDriverContext ctx) {
     return new AnalyticsProtocol(properties, hostname, ctx, map);
+  }
+
+  @Override
+  protected Properties getURIParameters(final URI uri) {
+    return new Properties(); // The actual properties are passed through the AnalyticsProtocol.
+  }
+
+  /**
+   * Returns the underlying driver context.
+   */
+  ADBDriverContext context() {
+    return context;
   }
 
 }

@@ -24,23 +24,25 @@ import com.couchbase.client.jdbc.sdk.ConnectionManager;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import org.apache.asterix.jdbc.core.ADBDriverContext;
 import org.apache.asterix.jdbc.core.ADBDriverProperty;
 import org.apache.asterix.jdbc.core.ADBProtocolBase;
-import org.apache.http.entity.ContentProducer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class AnalyticsProtocol extends ADBProtocolBase {
 
@@ -51,7 +53,8 @@ public class AnalyticsProtocol extends ADBProtocolBase {
 
   private final ConnectionHandle connectionHandle;
 
-  AnalyticsProtocol(Properties properties, String hostname, ADBDriverContext driverContext, Map<ADBDriverProperty, Object> params) {
+  AnalyticsProtocol(final Properties properties, final String hostname, final ADBDriverContext driverContext,
+                    final Map<ADBDriverProperty, Object> params) {
     super(driverContext, params);
 
     String user = (String) ADBDriverProperty.Common.USER.fetchPropertyValue(params);
@@ -68,18 +71,19 @@ public class AnalyticsProtocol extends ADBProtocolBase {
   }
 
   @Override
-  public void close() throws SQLException {
+  public void close() {
 
   }
 
   @Override
-  public boolean ping(int i) {
+  public boolean ping(final int timeoutSeconds) {
     try {
       CoreHttpResponse coreHttpResponse = connectionHandle.rawAnalyticsQuery(
         ConnectionHandle.HttpMethod.GET,
         PING_ENDPOINT_PATH,
         Collections.emptyMap(),
-        null
+        null,
+        Duration.ofSeconds(timeoutSeconds)
       );
 
       if (!coreHttpResponse.status().success()) {
@@ -93,10 +97,10 @@ public class AnalyticsProtocol extends ADBProtocolBase {
   }
 
   @Override
-  public QueryServiceResponse submitStatement(String sql, List<?> args, UUID executionId,
-                                              SubmitStatementOptions options) throws SQLException {
+  public QueryServiceResponse submitStatement(final String sql, final List<?> args, final UUID executionId,
+                                              final SubmitStatementOptions options) throws SQLException {
 
-    ByteArrayOutputStreamImpl baos = new ByteArrayOutputStreamImpl(512);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream(512);
     try {
       JsonGenerator jsonGen =
         driverContext.getGenericObjectWriter().getFactory().createGenerator(baos, JsonEncoding.UTF8);
@@ -132,28 +136,35 @@ public class AnalyticsProtocol extends ADBProtocolBase {
       jsonGen.writeEndObject();
       jsonGen.flush();
     } catch (InvalidDefinitionException e) {
-      // TODO throw getErrorReporter().errorUnexpectedType(e.getType().getRawClass());
-      throw new RuntimeException();
+      throw getErrorReporter().errorUnexpectedType(e.getType().getRawClass());
     } catch (IOException e) {
-      throw new RuntimeException();
+      throw getErrorReporter().errorInRequestGeneration(e);
     }
 
     Map<String, Object> headers = new HashMap<>();
     headers.put("Accept", "application/json; charset=UTF-8; lossless-adm=true");
+
+    if (getLogger().isLoggable(Level.FINE)) {
+      getLogger().log(Level.FINE, String.format("%s { %s } with args { %s }",
+        options.compileOnly ? "compile" : "execute", sql, args != null ? args : ""));
+    }
 
     try {
       CoreHttpResponse coreHttpResponse = connectionHandle.rawAnalyticsQuery(
         ConnectionHandle.HttpMethod.POST,
         QUERY_SERVICE_ENDPOINT_PATH,
         headers,
-        baos.toByteArray()
+        baos.toByteArray(),
+        Duration.ofSeconds(options.timeoutSeconds)
       );
 
       return driverContext.getGenericObjectReader()
         .forType(QueryServiceResponse.class)
         .readValue(coreHttpResponse.content());
-    } catch (Exception e) {
-      throw new SQLException("Could not decode response", e);
+    } catch (JsonProcessingException e) {
+      throw getErrorReporter().errorInProtocol(e);
+    } catch (IOException e) {
+      throw getErrorReporter().errorInConnection(e);
     }
   }
 
@@ -169,6 +180,7 @@ public class AnalyticsProtocol extends ADBProtocolBase {
       ConnectionHandle.HttpMethod.GET,
       QUERY_RESULT_ENDPOINT_PATH + handlePath,
       Collections.emptyMap(),
+      null,
       null
     );
 
@@ -180,8 +192,12 @@ public class AnalyticsProtocol extends ADBProtocolBase {
       }
 
       return parser;
+    } catch (SQLException e) {
+      throw e;
+    } catch (JsonProcessingException e) {
+      throw getErrorReporter().errorInProtocol(e);
     } catch (IOException e) {
-      throw new SQLException("Could not fetch result", e);
+      throw getErrorReporter().errorInConnection(e);
     }
   }
 
@@ -210,17 +226,12 @@ public class AnalyticsProtocol extends ADBProtocolBase {
       ConnectionHandle.HttpMethod.DELETE,
       ACTIVE_REQUESTS_ENDPOINT_PATH + "?" + CLIENT_CONTEXT_ID + "=" + uuid.toString(),
       Collections.emptyMap(),
+      null,
       null
     );
 
     if (!coreHttpResponse.status().success()) {
       throw new SQLException("Failed to cancel running statement \""+uuid+"\". Response: " + coreHttpResponse);
-    }
-  }
-
-  static final class ByteArrayOutputStreamImpl extends ByteArrayOutputStream implements ContentProducer {
-    private ByteArrayOutputStreamImpl(int size) {
-      super(size);
     }
   }
 

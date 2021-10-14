@@ -21,7 +21,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
-            <artifactId>asterix-jdbc-driver</artifactId>
+            <artifactId>asterix-jdbc-core</artifactId>
             <version>0.9.7-SNAPSHOT</version>
         </dependency>
         <dependency>

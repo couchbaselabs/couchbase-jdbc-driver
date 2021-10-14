@@ -34,10 +34,10 @@ public class ConnectionCoordinate {
   private final Properties properties;
 
   public static ConnectionCoordinate create(String connectionString, String username, String password, Properties properties) {
-    return new ConnectionCoordinate(connectionString, PasswordAuthenticator.create(username, password), username, properties);
+    return new ConnectionCoordinate(connectionString, PasswordAuthenticator.create(username, password), properties);
   }
 
-  private ConnectionCoordinate(String connectionString, Authenticator authenticator, String username, Properties properties) {
+  private ConnectionCoordinate(String connectionString, Authenticator authenticator, Properties properties) {
     this.connectionString = notNullOrEmpty(connectionString, "ConnectionString");
     this.authenticator = notNull(authenticator, "Authenticator");
     this.properties = properties == null ? new Properties() : properties;

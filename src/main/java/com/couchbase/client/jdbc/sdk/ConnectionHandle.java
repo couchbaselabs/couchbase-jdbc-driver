@@ -24,10 +24,9 @@ import com.couchbase.client.core.endpoint.http.CoreHttpResponse;
 import com.couchbase.client.core.json.Mapper;
 import com.couchbase.client.core.msg.RequestTarget;
 import com.couchbase.client.java.Cluster;
-import com.couchbase.client.java.analytics.AnalyticsOptions;
-import com.couchbase.client.java.analytics.AnalyticsResult;
 
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -42,17 +41,6 @@ public class ConnectionHandle {
 
   ConnectionHandle(Cluster cluster) {
     this.cluster = cluster;
-  }
-
-  /**
-   * Run an Analytics query against the cluster.
-   *
-   * @param statement the statement to execute.
-   * @param options the analytics options.
-   * @return the {@link AnalyticsResult} in a blocking fashion.
-   */
-  public AnalyticsResult analyticsQuery(final String statement, final AnalyticsOptions options) {
-    return cluster.analyticsQuery(statement, options);
   }
 
   /**
@@ -84,11 +72,12 @@ public class ConnectionHandle {
    *
    * @return the core response to use.
    */
-  public CoreHttpResponse rawAnalyticsQuery(HttpMethod method, String path, Map<String, Object> headers, byte[] content)
+  public CoreHttpResponse rawAnalyticsQuery(HttpMethod method, String path, Map<String, Object> headers, byte[] content,
+                                            Duration timeout)
     throws SQLException {
     CoreHttpClient client = cluster.core().httpClient(RequestTarget.analytics());
 
-    CoreCommonOptions options = CoreCommonOptions.DEFAULT;
+    CoreCommonOptions options = CoreCommonOptions.of(timeout, null, null);
 
     CoreHttpRequest.Builder builder;
     switch (method) {
