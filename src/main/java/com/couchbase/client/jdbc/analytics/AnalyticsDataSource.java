@@ -69,13 +69,32 @@ public class AnalyticsDataSource implements DataSource {
       url = url + "/" + schema;
     }
 
-    Properties properties = new Properties();
-    properties.setProperty(ADBDriverProperty.Common.USER.getPropertyName(), username);
-    properties.setProperty(ADBDriverProperty.Common.PASSWORD.getPropertyName(), password);
+    Properties adbProperties = new Properties();
+    adbProperties.setProperty(ADBDriverProperty.Common.USER.getPropertyName(), username);
+    adbProperties.setProperty(ADBDriverProperty.Common.PASSWORD.getPropertyName(), password);
 
-    // TODO: proxy more properties
 
-    return analyticsDriver.connect(url, properties);
+    String dataverseMode = CouchbaseDriverProperty.CATALOG_DATAVERSE_MODE.get(properties);
+    if ("catalogSchema".equals(dataverseMode)) {
+      adbProperties.setProperty(ADBDriverProperty.Common.CATALOG_DATAVERSE_MODE.getPropertyName(), "2");
+    }
+
+    adbProperties.setProperty(
+      ADBDriverProperty.Common.CATALOG_INCLUDES_SCHEMALESS.getPropertyName(),
+      CouchbaseDriverProperty.CATALOG_INCLUDE_SCHEMALESS.get(properties)
+    );
+
+    adbProperties.setProperty(
+      ADBDriverProperty.Common.MAX_WARNINGS.getPropertyName(),
+      CouchbaseDriverProperty.MAX_WARNINGS.get(properties)
+    );
+
+    adbProperties.setProperty(
+      ADBDriverProperty.Common.SQL_COMPAT_MODE.getPropertyName(),
+      CouchbaseDriverProperty.SQL_COMPAT_MODE.get(properties)
+    );
+
+    return analyticsDriver.connect(url, adbProperties);
   }
 
   @Override

@@ -34,7 +34,7 @@ public enum CouchbaseDriverProperty {
   ),
   CATALOG_DATAVERSE_MODE(
     "catalogDataverseMode",
-    "catalogSchema",
+    "catalog",
     false,
     "Defines how the catalog should be interpreted. With \"catalog\" both bucket and scope are used " +
       "for the catalog, while with \"catalogSchema\" the bucket is used as a catalog and the scope as the schema.",
@@ -45,8 +45,19 @@ public enum CouchbaseDriverProperty {
     "false",
     false,
     "If the Catalog API should also include schemaless catalogs."
-  )
-  ;
+  ),
+  MAX_WARNINGS(
+    "maxWarnings",
+    "10",
+    false,
+    "The maximum number of warnings that should be emitted."
+  ),
+  SQL_COMPAT_MODE(
+    "sqlCompatMode",
+    "true",
+    false,
+    "If the analytics SQL compatibility mode should be used."
+  );
 
   private final String name;
   private final String defaultValue;

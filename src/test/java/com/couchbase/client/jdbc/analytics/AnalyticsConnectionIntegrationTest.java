@@ -53,10 +53,10 @@ class AnalyticsConnectionIntegrationTest extends BaseAnalyticsIntegrationTest {
 
   @Test
   void appliesCustomCatalogProperty() throws Exception {
-    String args = "?catalogDataverseMode=catalog";
+    String args = "?catalogDataverseMode=catalogSchema";
     Connection connection = DriverManager.getConnection("jdbc:couchbase:analytics://" + hostname() + "/foo/bar" + args, username(), password());
-    assertEquals("foo/bar", connection.getCatalog());
-    assertNull(connection.getSchema());
+    assertEquals("foo", connection.getCatalog());
+    assertEquals("bar", connection.getSchema());
 
     connection = DriverManager.getConnection("jdbc:couchbase:analytics://" + hostname() + "/foo" + args, username(), password());
     assertEquals("foo", connection.getCatalog());

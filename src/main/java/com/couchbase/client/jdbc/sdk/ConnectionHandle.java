@@ -77,7 +77,8 @@ public class ConnectionHandle {
     throws SQLException {
     CoreHttpClient client = cluster.core().httpClient(RequestTarget.analytics());
 
-    CoreCommonOptions options = CoreCommonOptions.of(timeout, null, null);
+
+    CoreCommonOptions options = CoreCommonOptions.of(timeout == null || timeout.isZero() ? null : timeout, null, null);
 
     CoreHttpRequest.Builder builder;
     switch (method) {
