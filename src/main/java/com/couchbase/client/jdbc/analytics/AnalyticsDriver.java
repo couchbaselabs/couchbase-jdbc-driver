@@ -16,9 +16,12 @@
 
 package com.couchbase.client.jdbc.analytics;
 
+import com.couchbase.client.jdbc.CouchbaseDriver;
+import com.couchbase.client.jdbc.CouchbaseDriverProperty;
 import org.apache.asterix.jdbc.core.ADBDriverBase;
 import org.apache.asterix.jdbc.core.ADBDriverContext;
 import org.apache.asterix.jdbc.core.ADBDriverProperty;
+import org.apache.asterix.jdbc.core.ADBProductVersion;
 import org.apache.asterix.jdbc.core.ADBProtocolBase;
 
 import java.net.URI;
@@ -50,11 +53,19 @@ public class AnalyticsDriver extends ADBDriverBase {
     return new Properties(); // The actual properties are passed through the AnalyticsProtocol.
   }
 
-  /**
-   * Returns the underlying driver context.
-   */
-  ADBDriverContext context() {
-    return context;
+  @Override
+  protected ADBProductVersion getDriverVersion() {
+    return new ADBProductVersion(
+      CouchbaseDriver.DRIVER_NAME,
+      CouchbaseDriver.DRIVER_VERSION.get(),
+      CouchbaseDriver.DRIVER_MAJOR_VERSION.get(),
+      CouchbaseDriver.DRIVER_MINOR_VERSION.get()
+    );
+  }
+
+  @Override
+  public ADBDriverContext getOrCreateDriverContext() {
+    return super.getOrCreateDriverContext();
   }
 
 }

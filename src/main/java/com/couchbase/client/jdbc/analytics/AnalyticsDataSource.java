@@ -105,7 +105,7 @@ public class AnalyticsDataSource implements DataSource {
   @Override
   public final <T> T unwrap(Class<T> iface) throws SQLException {
     if (!iface.isInstance(this)) {
-      throw analyticsDriver.context().getErrorReporter().errorUnwrapTypeMismatch(iface);
+      throw analyticsDriver.getOrCreateDriverContext().getErrorReporter().errorUnwrapTypeMismatch(iface);
     }
     return iface.cast(this);
   }
