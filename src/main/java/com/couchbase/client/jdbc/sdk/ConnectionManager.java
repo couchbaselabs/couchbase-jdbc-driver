@@ -17,6 +17,7 @@
 package com.couchbase.client.jdbc.sdk;
 
 import com.couchbase.client.core.env.CoreEnvironment;
+import com.couchbase.client.core.env.LoggerConfig;
 import com.couchbase.client.core.env.PropertyLoader;
 import com.couchbase.client.core.env.SystemPropertyPropertyLoader;
 import com.couchbase.client.java.Cluster;
@@ -58,10 +59,17 @@ public class ConnectionManager {
   private Cluster clusterForCoordinate(final ConnectionCoordinate coordinate) {
     synchronized (this) {
       if (environment == null) {
+        // This logger config makes sure the SDK also uses java.util.Logging.
+        LoggerConfig.Builder loggerConfig = LoggerConfig
+          .builder()
+          .disableSlf4J(true)
+          .fallbackToConsole(false);
+
         environment = ClusterEnvironment
           .builder()
           .load((PropertyLoader<CoreEnvironment.Builder>) builder ->
             new SystemPropertyPropertyLoader(coordinate.properties()).load(builder))
+          .loggerConfig(loggerConfig)
           .build();
       }
     }
