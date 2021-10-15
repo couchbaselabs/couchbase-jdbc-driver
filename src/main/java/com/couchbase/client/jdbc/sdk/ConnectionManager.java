@@ -16,19 +16,26 @@
 
 package com.couchbase.client.jdbc.sdk;
 
+import com.couchbase.client.core.deps.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import com.couchbase.client.core.env.CoreEnvironment;
 import com.couchbase.client.core.env.LoggerConfig;
 import com.couchbase.client.core.env.PropertyLoader;
+import com.couchbase.client.core.env.SecurityConfig;
 import com.couchbase.client.core.env.SystemPropertyPropertyLoader;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.env.ClusterEnvironment;
+import com.couchbase.client.jdbc.CouchbaseDriverProperty;
 
+import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.couchbase.client.core.util.CbCollections.isNullOrEmpty;
 import static com.couchbase.client.java.ClusterOptions.clusterOptions;
+import static java.util.Objects.isNull;
 
 /**
  * The {@link ConnectionManager} encapsulates SDK access and allows performing SDK operations.
@@ -91,11 +98,45 @@ public class ConnectionManager {
           .disableSlf4J(true)
           .fallbackToConsole(false);
 
+        SecurityConfig.Builder securityConfig = SecurityConfig
+          .builder();
+
+        if (Boolean.parseBoolean(CouchbaseDriverProperty.SSL.get(coordinate.properties()))) {
+          securityConfig = securityConfig.enableTls(true);
+
+          if ("no-verify".equals(CouchbaseDriverProperty.SSL_MODE.get(coordinate.properties()))) {
+            securityConfig = securityConfig.trustManagerFactory(InsecureTrustManagerFactory.INSTANCE);
+          } else {
+            if ("verify-ca".equals(CouchbaseDriverProperty.SSL_MODE.get(coordinate.properties()))) {
+              securityConfig = securityConfig.enableHostnameVerification(false);
+            }
+
+            String certPath = CouchbaseDriverProperty.SSL_CERT_PATH.get(coordinate.properties());
+            if (!isNullOrEmpty(certPath)) {
+              securityConfig.trustCertificate(Paths.get(certPath));
+            }
+
+            String keyStorePath = CouchbaseDriverProperty.SSL_KEYSTORE_PATH.get(coordinate.properties());
+            if (!isNullOrEmpty(keyStorePath)) {
+              String keyStorePassword = CouchbaseDriverProperty.SSL_KEYSTORE_PASSWORD.get(coordinate.properties());
+              if (isNull(keyStorePassword)) {
+                throw new IllegalArgumentException("If a keystore is provided, the password also needs to be provided");
+              }
+              securityConfig.trustStore(
+                Paths.get(keyStorePath),
+                keyStorePassword,
+                Optional.empty()
+              );
+            }
+          }
+        }
+
         environment = ClusterEnvironment
           .builder()
           .load((PropertyLoader<CoreEnvironment.Builder>) builder ->
             new SystemPropertyPropertyLoader(coordinate.properties()).load(builder))
           .loggerConfig(loggerConfig)
+          .securityConfig(securityConfig)
           .build();
       }
     }

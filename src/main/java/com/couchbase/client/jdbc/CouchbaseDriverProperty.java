@@ -57,6 +57,41 @@ public enum CouchbaseDriverProperty {
     "true",
     false,
     "If the analytics SQL compatibility mode should be used."
+  ),
+  SSL(
+    "ssl",
+    "false",
+    false,
+    "Set to true if transport encryption (TLS) should be enabled."
+  ),
+  SSL_MODE(
+    "sslMode",
+    "verify-full",
+    false,
+    "The mode used on how the certificate and/or the hostnames are verified.",
+    new String[] {
+      "verify-full", // performs certificate and hostname verification
+      "verify-ca",  // performs only certificate verification
+      "no-verify", // does not perform any verification (accepts all certs and hosts) - INSECURE!
+    }
+  ),
+  SSL_CERT_PATH(
+    "sslCertPath",
+    null,
+    false,
+    "The absolute path to the TLS certificate."
+  ),
+  SSL_KEYSTORE_PATH(
+    "sslKeystorePath",
+    null,
+    false,
+    "The absolute path to the java keystore."
+  ),
+  SSL_KEYSTORE_PASSWORD(
+    "sslKeystorePassword",
+    null,
+    false,
+    "The password for the keystore."
   );
 
   private final String name;
