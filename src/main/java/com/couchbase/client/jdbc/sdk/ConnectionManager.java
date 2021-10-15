@@ -25,6 +25,8 @@ import com.couchbase.client.java.env.ClusterEnvironment;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.couchbase.client.java.ClusterOptions.clusterOptions;
 
@@ -35,6 +37,8 @@ import static com.couchbase.client.java.ClusterOptions.clusterOptions;
  */
 public class ConnectionManager {
 
+  private static final Logger LOGGER = Logger.getLogger("ConnectionManager");
+
   /**
    * The singleton instance that should be used for the manager.
    */
@@ -43,7 +47,29 @@ public class ConnectionManager {
   private final Map<String, Cluster> clusterCache = new ConcurrentHashMap<>();
   private volatile ClusterEnvironment environment;
 
-  private ConnectionManager() {}
+  private ConnectionManager() {
+    try {
+      Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
+    } catch (Exception ex) {
+      LOGGER.log(Level.WARNING, "Could not initialize shutdown hook", ex);
+    }
+  }
+
+  /**
+   * This method can be used to proactively shutdown the SDK and all its resources.
+   */
+  public synchronized void shutdown() {
+    LOGGER.fine("Shutting down connected SDK resources.");
+
+    clusterCache.forEach((s, cluster) -> cluster.disconnect());
+    clusterCache.clear();
+    if (environment != null) {
+      environment.shutdown();
+      environment = null;
+    }
+
+    LOGGER.finest("Completed shutting down connected SDK resources.");
+  }
 
   /**
    * Returns a new thread safe handle for the given connection coordinate.
