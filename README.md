@@ -2,7 +2,7 @@
 
 [![license](https://img.shields.io/github/license/couchbase/couchbase-jvm-clients?color=brightgreen)](https://opensource.org/licenses/Apache-2.0)
 
-This project contains the source code for the Couchbase JDBC Driver which supports Analytics and Query (both with different capabilities).
+This project contains the source code for the Couchbase JDBC Driver which supports Analytics and eventually Query (both with different capabilities).
 
 ## Overview
 
@@ -11,13 +11,3 @@ Right now it is a **work in progress** and can only be obtained through the sour
 ## Usage: Analytics
 
  - JDBC URL Prefix: `jdbc:couchbase:analytics`
- - A JDBC `Catalog` corresponds to an analytics `Dataverse` or a Couchbase `Bucket` if mapped from collections.
- - A JDBC `Schema` corresponds to a Couchbase `Scope` and is optional.
-
-So if the `travel-sample` bucket is mapped with the `inventory` scope, the catalog is `travel-sample` and the schema is `inventory`.
-
-## Usage: Query
-
- - JDBC URL Prefix: `jdbc:couchbase:query`
-
-Query support is not enabled right now and will be added at a later point.
