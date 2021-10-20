@@ -12,19 +12,24 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
+        <couchbase-sdk.version>3.2.2</couchbase-sdk.version>
+        <asterix-jdbc.version>0.9.7-SNAPSHOT</asterix-jdbc.version>
     </properties>
 
     <dependencies>
+        <!-- Mandatory Dependencies -->
         <dependency>
             <groupId>com.couchbase.client</groupId>
             <artifactId>java-client</artifactId>
-            <version>3.2.3-SNAPSHOT</version>
+            <version>${couchbase-sdk.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-jdbc-core</artifactId>
-            <version>0.9.7-SNAPSHOT</version>
+            <version>${asterix-jdbc.version}</version>
         </dependency>
+
+        <!-- Test Dependencies -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
