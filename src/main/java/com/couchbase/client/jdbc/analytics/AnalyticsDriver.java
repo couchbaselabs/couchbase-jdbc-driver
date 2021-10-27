@@ -45,7 +45,7 @@ public class AnalyticsDriver extends ADBDriverBase {
   @Override
   protected ADBProtocolBase createProtocol(final String hostname, final int port,
                                            final Map<ADBDriverProperty, Object> map, final ADBDriverContext ctx) {
-    return new AnalyticsProtocol(properties, hostname, ctx, map);
+    return new AnalyticsProtocol(properties, hostname, port, ctx, map);
   }
 
   @Override

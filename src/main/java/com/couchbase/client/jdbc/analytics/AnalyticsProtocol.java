@@ -17,6 +17,7 @@
 package com.couchbase.client.jdbc.analytics;
 
 import com.couchbase.client.core.endpoint.http.CoreHttpResponse;
+import com.couchbase.client.core.util.ConnectionString;
 import com.couchbase.client.jdbc.CouchbaseDriver;
 import com.couchbase.client.jdbc.sdk.ConnectionCoordinate;
 import com.couchbase.client.jdbc.sdk.ConnectionHandle;
@@ -53,15 +54,20 @@ public class AnalyticsProtocol extends ADBProtocolBase {
 
   private final ConnectionHandle connectionHandle;
 
-  AnalyticsProtocol(final Properties properties, final String hostname, final ADBDriverContext driverContext,
+  AnalyticsProtocol(final Properties properties, final String hostname, final int port, final ADBDriverContext driverContext,
                     final Map<ADBDriverProperty, Object> params) {
     super(driverContext, params);
 
     String user = (String) ADBDriverProperty.Common.USER.fetchPropertyValue(params);
     String password = (String) ADBDriverProperty.Common.PASSWORD.fetchPropertyValue(params);
 
+    String connectionString = hostname;
+    if (port > 0) {
+      connectionString = connectionString + ":" + port;
+    }
+
     this.connectionHandle = ConnectionManager.INSTANCE.handle(
-      ConnectionCoordinate.create(hostname, user, password, properties)
+      ConnectionCoordinate.create(connectionString, user, password, properties)
     );
   }
 
@@ -152,7 +158,9 @@ public class AnalyticsProtocol extends ADBProtocolBase {
     // By default, JDBC mandates an infinite timeout, but the SDK will set it to 75s.
     // So if 0 from the adb layer, set it to MAX_VALUE to effectively simulate the
     // same duration.
-    long timeout = options.timeoutSeconds > 0 ? options.timeoutSeconds : Long.MAX_VALUE;
+    Duration timeout = options.timeoutSeconds > 0
+      ? Duration.ofSeconds(options.timeoutSeconds)
+      : Duration.ofNanos(Long.MAX_VALUE);
 
     try {
       CoreHttpResponse coreHttpResponse = connectionHandle.rawAnalyticsQuery(
@@ -160,7 +168,7 @@ public class AnalyticsProtocol extends ADBProtocolBase {
         QUERY_SERVICE_ENDPOINT_PATH,
         headers,
         baos.toByteArray(),
-        Duration.ofSeconds(timeout)
+        timeout
       );
 
       return driverContext.getGenericObjectReader()

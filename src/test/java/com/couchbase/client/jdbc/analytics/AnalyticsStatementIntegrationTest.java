@@ -65,4 +65,15 @@ class AnalyticsStatementIntegrationTest extends BaseAnalyticsIntegrationTest {
     assertEquals("Michael", resultSet.getString(1));
   }
 
+  @Test
+  void raisesStatementErrors() throws Exception {
+    Statement statement = connection.createStatement();
+    assertNotNull(statement);
+
+    boolean result = statement.execute("select 1=");
+    assertTrue(result);
+
+    ResultSet resultSet = statement.getResultSet();
+  }
+
 }
