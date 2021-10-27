@@ -149,13 +149,18 @@ public class AnalyticsProtocol extends ADBProtocolBase {
         options.compileOnly ? "compile" : "execute", sql, args != null ? args : ""));
     }
 
+    // By default, JDBC mandates an infinite timeout, but the SDK will set it to 75s.
+    // So if 0 from the adb layer, set it to MAX_VALUE to effectively simulate the
+    // same duration.
+    long timeout = options.timeoutSeconds > 0 ? options.timeoutSeconds : Long.MAX_VALUE;
+
     try {
       CoreHttpResponse coreHttpResponse = connectionHandle.rawAnalyticsQuery(
         ConnectionHandle.HttpMethod.POST,
         QUERY_SERVICE_ENDPOINT_PATH,
         headers,
         baos.toByteArray(),
-        Duration.ofSeconds(options.timeoutSeconds)
+        Duration.ofSeconds(timeout)
       );
 
       return driverContext.getGenericObjectReader()
