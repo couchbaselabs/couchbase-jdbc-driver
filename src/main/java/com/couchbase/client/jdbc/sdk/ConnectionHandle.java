@@ -16,11 +16,13 @@
 
 package com.couchbase.client.jdbc.sdk;
 
+import com.couchbase.client.core.cnc.Context;
 import com.couchbase.client.core.deps.com.fasterxml.jackson.databind.JsonNode;
 import com.couchbase.client.core.endpoint.http.CoreCommonOptions;
 import com.couchbase.client.core.endpoint.http.CoreHttpClient;
 import com.couchbase.client.core.endpoint.http.CoreHttpRequest;
 import com.couchbase.client.core.endpoint.http.CoreHttpResponse;
+import com.couchbase.client.core.error.CouchbaseException;
 import com.couchbase.client.core.json.Mapper;
 import com.couchbase.client.core.msg.RequestTarget;
 import com.couchbase.client.java.Cluster;
@@ -29,6 +31,7 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static com.couchbase.client.core.endpoint.http.CoreHttpPath.path;
 
@@ -106,10 +109,16 @@ public class ConnectionHandle {
 
     try {
       return builder.build().exec(cluster.core()).get();
+    } catch (ExecutionException ex) {
+      if (ex.getCause() instanceof CouchbaseException) {
+        String ctx = ((CouchbaseException) ex.getCause()).context().exportAsString(Context.ExportFormat.JSON);
+        throw new SQLException("Failed to perform analytics query: " + ctx, ex);
+      } else {
+        throw new SQLException("Failed to perform analytics query - cause: " + ex.getMessage(), ex);
+      }
     } catch (Exception ex) {
-      throw new SQLException("Failed to perform raw analytics query", ex);
+      throw new SQLException("Failed to perform analytics query - cause: " + ex.getMessage(), ex);
     }
-
   }
 
   public enum HttpMethod {

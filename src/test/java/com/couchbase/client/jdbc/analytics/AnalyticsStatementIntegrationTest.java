@@ -23,10 +23,12 @@ import org.junit.jupiter.api.Test;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AnalyticsStatementIntegrationTest extends BaseAnalyticsIntegrationTest {
@@ -66,14 +68,12 @@ class AnalyticsStatementIntegrationTest extends BaseAnalyticsIntegrationTest {
   }
 
   @Test
-  void raisesStatementErrors() throws Exception {
+  void returnsNestedErrorContext() throws Exception {
     Statement statement = connection.createStatement();
     assertNotNull(statement);
 
-    boolean result = statement.execute("select 1=");
-    assertTrue(result);
-
-    ResultSet resultSet = statement.getResultSet();
+    SQLException ex = assertThrows(SQLException.class, () -> statement.execute("select 1="));
+    assertTrue(ex.getMessage().contains("Syntax error"));
   }
 
 }
