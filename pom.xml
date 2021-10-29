@@ -123,6 +123,12 @@
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.2.4</version>
                 <configuration>
+                    <relocations>
+                        <relocation>
+                            <pattern>com.fasterxml.jackson</pattern>
+                            <shadedPattern>org.apache.asterix.jdbc.core.deps.com.fasterxml.jackson</shadedPattern>
+                        </relocation>
+                    </relocations>
                     <filters>
                         <filter>
                             <artifact>*:*</artifact>
@@ -136,6 +142,7 @@
                             <excludes>
                                 <exclude>META-INF/maven/com.fasterxml.jackson.core/*/pom.properties</exclude>
                                 <exclude>META-INF/maven/com.fasterxml.jackson.core/*/pom.xml</exclude>
+                                <exclude>META-INF/services/**</exclude>
                                 <exclude>META-INF/NOTICE</exclude>
                                 <exclude>META-INF/LICENSE</exclude>
                                 <exclude>META-INF/MANIFEST.MF</exclude>
