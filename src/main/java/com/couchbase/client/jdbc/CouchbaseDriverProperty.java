@@ -58,6 +58,18 @@ public enum CouchbaseDriverProperty {
     false,
     "If the analytics SQL compatibility mode should be used."
   ),
+  MIN_DRIVER_VERSION(
+    "minDriverVersion",
+    null,
+    false,
+    "Minimally required driver version."
+  ),
+  MIN_DATABASE_VERSION(
+    "minDatabaseVersion",
+    null,
+    false,
+    "Minimally required database version."
+  ),
   SSL(
     "ssl",
     "false",

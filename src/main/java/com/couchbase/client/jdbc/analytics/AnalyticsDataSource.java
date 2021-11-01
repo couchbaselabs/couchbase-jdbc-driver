@@ -94,6 +94,22 @@ public class AnalyticsDataSource implements DataSource {
       CouchbaseDriverProperty.SQL_COMPAT_MODE.get(properties)
     );
 
+    String minDriverVersion = CouchbaseDriverProperty.MIN_DRIVER_VERSION.get(properties);
+    if (minDriverVersion != null) {
+      adbProperties.setProperty(
+        ADBDriverProperty.Common.MIN_DRIVER_VERSION.getPropertyName(),
+        minDriverVersion
+      );
+    }
+
+    String minDatabaseVersion = CouchbaseDriverProperty.MIN_DATABASE_VERSION.get(properties);
+    if (minDatabaseVersion != null) {
+      adbProperties.setProperty(
+        ADBDriverProperty.Common.MIN_DATABASE_VERSION.getPropertyName(),
+        minDatabaseVersion
+      );
+    }
+
     return analyticsDriver.connect(url, adbProperties);
   }
 
