@@ -114,6 +114,12 @@
                                     <Impl-Git-Revision>${buildNumber}</Impl-Git-Revision>
                                 </manifestEntries>
                             </manifestSection>
+                            <manifestSection>
+                                <name>com/couchbase/client/jdbc/</name>
+                                <manifestEntries>
+                                    <Implementation-Version>${project.version}</Implementation-Version>
+                                </manifestEntries>
+                            </manifestSection>
                         </manifestSections>
                     </archive>
                 </configuration>
