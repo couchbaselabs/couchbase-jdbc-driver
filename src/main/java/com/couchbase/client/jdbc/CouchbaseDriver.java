@@ -19,7 +19,7 @@ package com.couchbase.client.jdbc;
 import com.couchbase.client.jdbc.analytics.AnalyticsDataSource;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
@@ -27,14 +27,10 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
-import java.util.Enumeration;
-import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 import java.util.logging.Logger;
 
 public final class CouchbaseDriver implements Driver {
@@ -77,33 +73,44 @@ public final class CouchbaseDriver implements Driver {
 
   private static void loadManifestVersions() {
     try {
-      Enumeration<URL> resources = CouchbaseDriver.class.getClassLoader().getResources(JarFile.MANIFEST_NAME);
-      while (resources.hasMoreElements()) {
-        URL manifestUrl = resources.nextElement();
-        if (manifestUrl == null) {
-          continue;
-        }
-        Manifest manifest = new Manifest(manifestUrl.openStream());
-        if (manifest.getEntries() == null) {
-          continue;
-        }
-
-        for (Map.Entry<String, Attributes> entry : manifest.getEntries().entrySet()) {
-          if (entry.getKey().startsWith("couchbase-jdbc-driver")) {
-            String version = entry.getValue().getValue("Impl-Version");
-            if (version != null && !version.isEmpty()) {
-              DRIVER_VERSION.set(version);
-              String[] parts = version.split("\\.");
-              if (parts[0] != null && parts[1] != null) {
-                DRIVER_MAJOR_VERSION.set(Integer.parseInt(parts[0]));
-                DRIVER_MINOR_VERSION.set(Integer.parseInt(parts[1]));
-              }
-            }
-          }
+      String version = getPackageVersion();
+      if (version == null || version.isEmpty()) {
+        version = getModuleVersion();
+      }
+      if (version != null && !version.isEmpty()) {
+        DRIVER_VERSION.set(version);
+        String[] parts = version.split("\\.");
+        if (parts[0] != null && parts[1] != null) {
+          DRIVER_MAJOR_VERSION.set(Integer.parseInt(parts[0]));
+          DRIVER_MINOR_VERSION.set(Integer.parseInt(parts[1]));
         }
       }
     } catch (Exception e) {
       // Ignored on purpose.
+    }
+  }
+
+  private static String getPackageVersion() {
+    return CouchbaseDriver.class.getPackage().getImplementationVersion();
+  }
+
+  private static String getModuleVersion() {
+    try {
+      Object module = Class.class.getMethod("getModule").invoke(CouchbaseDriver.class);
+      if (module != null) {
+        Object descriptor = module.getClass().getMethod("getDescriptor").invoke(module);
+        if (descriptor != null) {
+          Object rawVersionRes = descriptor.getClass().getMethod("rawVersion").invoke(descriptor);
+          if (rawVersionRes instanceof Optional<?>) {
+            Optional<?> rawVersionOpt = ((Optional<?>) rawVersionRes);
+            return rawVersionOpt.isPresent() ? rawVersionOpt.get().toString() : null;
+          }
+        }
+      }
+      return null;
+    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+      // Ignored on purpose.
+      return null;
     }
   }
 
