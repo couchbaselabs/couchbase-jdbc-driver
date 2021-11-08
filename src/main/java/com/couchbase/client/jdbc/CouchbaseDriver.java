@@ -103,8 +103,7 @@ public final class CouchbaseDriver implements Driver {
         if (descriptor != null) {
           Object rawVersionRes = descriptor.getClass().getMethod("rawVersion").invoke(descriptor);
           if (rawVersionRes instanceof Optional<?>) {
-            Optional<?> rawVersionOpt = ((Optional<?>) rawVersionRes);
-            return rawVersionOpt.isPresent() ? rawVersionOpt.get().toString() : null;
+            return ((Optional<?>) rawVersionRes).map(Object::toString).orElse(null);
           }
         }
       }

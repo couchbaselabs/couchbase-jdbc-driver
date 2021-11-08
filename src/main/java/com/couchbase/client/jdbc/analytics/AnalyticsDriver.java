@@ -17,7 +17,6 @@
 package com.couchbase.client.jdbc.analytics;
 
 import com.couchbase.client.jdbc.CouchbaseDriver;
-import com.couchbase.client.jdbc.CouchbaseDriverProperty;
 import org.apache.asterix.jdbc.core.ADBDriverBase;
 import org.apache.asterix.jdbc.core.ADBDriverContext;
 import org.apache.asterix.jdbc.core.ADBDriverProperty;

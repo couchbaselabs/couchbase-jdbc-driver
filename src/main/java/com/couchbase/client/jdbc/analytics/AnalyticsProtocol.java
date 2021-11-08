@@ -17,7 +17,6 @@
 package com.couchbase.client.jdbc.analytics;
 
 import com.couchbase.client.core.endpoint.http.CoreHttpResponse;
-import com.couchbase.client.core.util.ConnectionString;
 import com.couchbase.client.jdbc.CouchbaseDriver;
 import com.couchbase.client.jdbc.sdk.ConnectionCoordinate;
 import com.couchbase.client.jdbc.sdk.ConnectionHandle;
@@ -205,8 +204,6 @@ public class AnalyticsProtocol extends ADBProtocolBase {
       }
 
       return parser;
-    } catch (SQLException e) {
-      throw e;
     } catch (JsonProcessingException e) {
       throw getErrorReporter().errorInProtocol(e);
     } catch (IOException e) {
