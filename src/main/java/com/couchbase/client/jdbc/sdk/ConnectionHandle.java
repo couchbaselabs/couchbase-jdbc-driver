@@ -40,10 +40,12 @@ import static com.couchbase.client.core.endpoint.http.CoreHttpPath.path;
  */
 public class ConnectionHandle {
 
+  private final ConnectionCoordinate coordinate;
   private final Cluster cluster;
 
-  ConnectionHandle(Cluster cluster) {
+  ConnectionHandle(Cluster cluster, ConnectionCoordinate coordinate) {
     this.cluster = cluster;
+    this.coordinate = coordinate;
   }
 
   /**
@@ -119,6 +121,10 @@ public class ConnectionHandle {
     } catch (Exception ex) {
       throw new SQLException("Failed to perform analytics query - cause: " + ex.getMessage(), ex);
     }
+  }
+
+  public void close() {
+    ConnectionManager.INSTANCE.maybeClose(coordinate);
   }
 
   public enum HttpMethod {

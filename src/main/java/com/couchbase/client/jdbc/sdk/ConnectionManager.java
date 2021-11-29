@@ -52,6 +52,8 @@ public class ConnectionManager {
   public static ConnectionManager INSTANCE = new ConnectionManager();
 
   private final Map<String, Cluster> clusterCache = new ConcurrentHashMap<>();
+  private final Map<String, Long> openHandles = new ConcurrentHashMap<>();
+
   private volatile ClusterEnvironment environment;
 
   private ConnectionManager() {
@@ -85,9 +87,8 @@ public class ConnectionManager {
    * @return the handle.
    */
   public ConnectionHandle handle(final ConnectionCoordinate coordinate) {
-    return new ConnectionHandle(clusterForCoordinate(coordinate));
+    return new ConnectionHandle(clusterForCoordinate(coordinate), coordinate);
   }
-
 
   private Cluster clusterForCoordinate(final ConnectionCoordinate coordinate) {
     synchronized (this) {
@@ -139,6 +140,16 @@ public class ConnectionManager {
           .securityConfig(securityConfig)
           .build();
       }
+
+      long newHandleCount = openHandles.compute(coordinate.connectionString(), (k, v) -> {
+        if (v == null) {
+          return 1L;
+        } else {
+          return v + 1;
+        }
+      });
+
+      LOGGER.fine("Incrementing Handle Count to " + newHandleCount + " for Coordinate " + coordinate);
     }
 
     return clusterCache.computeIfAbsent(
@@ -148,6 +159,32 @@ public class ConnectionManager {
         clusterOptions(coordinate.authenticator()).environment(environment)
       )
     );
+  }
+
+  /**
+   * Closes the connection associated with this coordinate if the reference count reaches zero.
+   *
+   * @param coordinate the coordinate to close the connection for.
+   */
+  public synchronized void maybeClose(final ConnectionCoordinate coordinate) {
+    long newHandleCount = openHandles.compute(coordinate.connectionString(), (k, v) -> {
+      if (v == null) {
+        throw new IllegalStateException("No handle present for Coordinate, this should have not happened! " + coordinate);
+      } else {
+        return v - 1;
+      }
+    });
+
+    LOGGER.fine("Decrementing Handle Count to " + newHandleCount + " for Coordinate " + coordinate);
+
+    if (newHandleCount <= 0) {
+      LOGGER.fine("Coordinate " + coordinate + " reached count 0, disconnecting Cluster instance.");
+
+      Cluster toRemove = clusterCache.remove(coordinate.connectionString());
+      if(toRemove != null) {
+        toRemove.disconnect();
+      }
+    }
   }
 
 }

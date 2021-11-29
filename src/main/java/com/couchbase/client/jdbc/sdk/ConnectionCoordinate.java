@@ -55,4 +55,12 @@ public class ConnectionCoordinate {
     return properties;
   }
 
+  @Override
+  public String toString() {
+    return "ConnectionCoordinate{" +
+      "connectionString='" + connectionString + '\'' +
+      ", authenticator=" + authenticator.getClass() +
+      ", properties=" + properties +
+      '}';
+  }
 }

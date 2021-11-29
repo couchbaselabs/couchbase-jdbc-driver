@@ -77,7 +77,7 @@ public class AnalyticsProtocol extends ADBProtocolBase {
 
   @Override
   public void close() {
-
+    connectionHandle.close();
   }
 
   @Override
