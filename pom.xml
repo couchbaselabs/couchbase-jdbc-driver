@@ -186,6 +186,10 @@
                             <artifact>com.couchbase.client:core-io</artifact>
                             <excludes>
                                 <exclude>META-INF/MANIFEST.MF</exclude>
+                                <exclude>META-INF/NOTICE</exclude>
+                                <exclude>META-INF/LICENSE</exclude>
+                                <exclude>META-INF/NOTICE.txt</exclude>
+                                <exclude>META-INF/LICENSE.txt</exclude>
                             </excludes>
                         </filter>
                     </filters>
