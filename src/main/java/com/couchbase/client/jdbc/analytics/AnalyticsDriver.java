@@ -16,6 +16,7 @@
 
 package com.couchbase.client.jdbc.analytics;
 
+import com.couchbase.client.core.error.TimeoutException;
 import com.couchbase.client.jdbc.CouchbaseDriver;
 import org.apache.asterix.jdbc.core.ADBDriverBase;
 import org.apache.asterix.jdbc.core.ADBDriverContext;
@@ -24,6 +25,8 @@ import org.apache.asterix.jdbc.core.ADBProductVersion;
 import org.apache.asterix.jdbc.core.ADBProtocolBase;
 
 import java.net.URI;
+import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
 import java.util.Map;
 import java.util.Properties;
 
@@ -43,8 +46,12 @@ public class AnalyticsDriver extends ADBDriverBase {
 
   @Override
   protected ADBProtocolBase createProtocol(final String hostname, final int port,
-                                           final Map<ADBDriverProperty, Object> map, final ADBDriverContext ctx) {
-    return new AnalyticsProtocol(properties, hostname, port, ctx, map);
+                                           final Map<ADBDriverProperty, Object> map, final ADBDriverContext ctx) throws SQLException {
+    try {
+      return new AnalyticsProtocol(properties, hostname, port, ctx, map);
+    } catch (TimeoutException ex) {
+      throw new SQLTimeoutException("Could not connect to the Cluster in the given connectTimeout interval.", ex);
+    }
   }
 
   @Override
