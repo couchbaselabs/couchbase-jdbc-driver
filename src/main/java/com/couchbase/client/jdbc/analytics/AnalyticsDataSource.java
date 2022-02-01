@@ -63,7 +63,14 @@ public class AnalyticsDataSource implements DataSource {
   }
 
   @Override
-  public Connection getConnection(String username, String password) throws SQLException {
+  public Connection getConnection(final String username, final String password) throws SQLException {
+    if (username == null || username.isEmpty()) {
+      throw new IllegalArgumentException("A username must be provided to connect");
+    }
+    if (password == null || password.isEmpty()) {
+      throw new IllegalArgumentException("A password must be provided to connect");
+    }
+
     String url = "jdbc:asterixdb://"  + hostname + "/" + catalog;
     if (schema != null && !schema.isEmpty()) {
       url = url + "/" + schema;
