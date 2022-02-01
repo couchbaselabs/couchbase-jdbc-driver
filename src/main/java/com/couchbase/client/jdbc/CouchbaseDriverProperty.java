@@ -104,6 +104,22 @@ public enum CouchbaseDriverProperty {
     null,
     false,
     "The password for the keystore."
+  ),
+  SCAN_CONSISTENCY(
+    "scanConsistency",
+    null,
+    false,
+    "The scanConsistency to use for a query.",
+    new String[] {
+      "notBounded",
+      "requestPlus",
+    }
+  ),
+  SCAN_WAIT(
+    "scanWait",
+    null,
+    false,
+    "The scanWait value to use for a query."
   );
 
   private final String name;

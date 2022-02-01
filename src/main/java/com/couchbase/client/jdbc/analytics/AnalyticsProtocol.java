@@ -17,7 +17,10 @@
 package com.couchbase.client.jdbc.analytics;
 
 import com.couchbase.client.core.endpoint.http.CoreHttpResponse;
+import com.couchbase.client.core.error.InvalidArgumentException;
+import com.couchbase.client.core.util.Golang;
 import com.couchbase.client.jdbc.CouchbaseDriver;
+import com.couchbase.client.jdbc.CouchbaseDriverProperty;
 import com.couchbase.client.jdbc.sdk.ConnectionCoordinate;
 import com.couchbase.client.jdbc.sdk.ConnectionHandle;
 import com.couchbase.client.jdbc.sdk.ConnectionManager;
@@ -46,6 +49,9 @@ import java.util.logging.Level;
 
 public class AnalyticsProtocol extends ADBProtocolBase {
 
+  private static final String SCAN_WAIT = "scan_wait";
+  private static final String SCAN_CONSISTENCY = "scan_consistency";
+
   private static final String QUERY_SERVICE_ENDPOINT_PATH = "/query/service";
   private static final String QUERY_RESULT_ENDPOINT_PATH = "/query/service/result";
   private static final String ACTIVE_REQUESTS_ENDPOINT_PATH = "/analytics/admin/active_requests";
@@ -53,12 +59,38 @@ public class AnalyticsProtocol extends ADBProtocolBase {
 
   private final ConnectionHandle connectionHandle;
 
-  AnalyticsProtocol(final Properties properties, final String hostname, final int port, final ADBDriverContext driverContext,
-                    final Map<ADBDriverProperty, Object> params) {
+  private final String scanConsistency;
+  private final String scanWait;
+
+  AnalyticsProtocol(final Properties properties, final String hostname, final int port,
+                    final ADBDriverContext driverContext, final Map<ADBDriverProperty, Object> params) {
     super(driverContext, params);
 
     String user = (String) ADBDriverProperty.Common.USER.fetchPropertyValue(params);
     String password = (String) ADBDriverProperty.Common.PASSWORD.fetchPropertyValue(params);
+
+    String sw = CouchbaseDriverProperty.SCAN_WAIT.get(properties);
+    if (sw == null || sw.isEmpty()) {
+      scanWait = null;
+    } else {
+      try {
+        Duration duration = Golang.parseDuration(sw);
+        scanWait = duration.isZero() ? null : sw;
+      } catch (InvalidArgumentException ex) {
+        throw new IllegalArgumentException("Provided scanWait value \"" + sw + "\" is invalid");
+      }
+    }
+
+    String sc = CouchbaseDriverProperty.SCAN_CONSISTENCY.get(properties);
+    if ("requestPlus".equals(sc)) {
+      scanConsistency = "request_plus";
+    } else if ("notBounded".equals(sc)) {
+      scanConsistency = "not_bounded";
+    } else if (sc == null || sc.isEmpty()) {
+      scanConsistency = null;
+    } else {
+      throw new IllegalArgumentException("Provided scanConsistency value \"" + sc + "\" is invalid");
+    }
 
     String connectionString = hostname;
     if (port > 0) {
@@ -133,6 +165,12 @@ public class AnalyticsProtocol extends ADBProtocolBase {
       }
       if (executionId != null) {
         jsonGen.writeStringField(CLIENT_CONTEXT_ID, executionId.toString());
+      }
+      if(scanWait != null && !scanWait.isEmpty()) {
+        jsonGen.writeStringField(SCAN_WAIT, scanWait);
+      }
+      if (scanConsistency != null && !scanConsistency.isEmpty()) {
+        jsonGen.writeStringField(SCAN_CONSISTENCY, scanConsistency);
       }
       if (args != null && !args.isEmpty()) {
         jsonGen.writeFieldName(ARGS);

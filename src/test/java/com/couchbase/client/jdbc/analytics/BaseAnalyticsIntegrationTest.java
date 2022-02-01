@@ -23,7 +23,7 @@ abstract class BaseAnalyticsIntegrationTest {
   }
 
   static String hostname() {
-    return "10.145.213.101";
+    return "127.0.0.1";
   }
 
   static String username() {
