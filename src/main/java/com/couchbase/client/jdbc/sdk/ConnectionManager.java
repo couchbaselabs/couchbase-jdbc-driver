@@ -22,11 +22,13 @@ import com.couchbase.client.core.env.LoggerConfig;
 import com.couchbase.client.core.env.PropertyLoader;
 import com.couchbase.client.core.env.SecurityConfig;
 import com.couchbase.client.core.env.SystemPropertyPropertyLoader;
+import com.couchbase.client.core.util.Golang;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.env.ClusterEnvironment;
 import com.couchbase.client.jdbc.CouchbaseDriverProperty;
 
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -154,10 +156,22 @@ public class ConnectionManager {
 
     return clusterCache.computeIfAbsent(
       coordinate.connectionString(),
-      s -> Cluster.connect(
-        coordinate.connectionString(),
-        clusterOptions(coordinate.authenticator()).environment(environment)
-      )
+      s -> {
+        Cluster c = Cluster.connect(
+          coordinate.connectionString(),
+          clusterOptions(coordinate.authenticator()).environment(environment)
+        );
+
+        String connectTimeout = CouchbaseDriverProperty.CONNECT_TIMEOUT.get(coordinate.properties());
+        if (connectTimeout != null && !connectTimeout.isEmpty()) {
+          LOGGER.fine("Applying WaitUntilReady timeout (connectTimeout) of " + connectTimeout);
+          c.waitUntilReady(Golang.parseDuration(connectTimeout));
+        } else {
+          LOGGER.fine("No connectTimeout set, so not performing waitUntilReady");
+        }
+
+        return c;
+      }
     );
   }
 

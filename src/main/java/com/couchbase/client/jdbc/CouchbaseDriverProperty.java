@@ -32,6 +32,14 @@ public enum CouchbaseDriverProperty {
     true,
     "Username to connect to the database as"
   ),
+  CONNECT_TIMEOUT(
+    "connectTimeout",
+    null,
+    false,
+    "If set to a value, the amount of time the driver waits during bootstrap to establish connections " +
+      "properly before giving up. If not provided the lazy bootstrap continues in the background and likely the " +
+      "operation will time out at the configured value (by default 75s). The format to be used is \"10s\" or similar."
+  ),
   CATALOG_DATAVERSE_MODE(
     "catalogDataverseMode",
     "catalog",
