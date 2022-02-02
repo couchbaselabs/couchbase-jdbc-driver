@@ -22,14 +22,12 @@ import com.couchbase.client.core.env.LoggerConfig;
 import com.couchbase.client.core.env.PropertyLoader;
 import com.couchbase.client.core.env.SecurityConfig;
 import com.couchbase.client.core.env.SystemPropertyPropertyLoader;
-import com.couchbase.client.core.error.TimeoutException;
 import com.couchbase.client.core.util.Golang;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.env.ClusterEnvironment;
 import com.couchbase.client.jdbc.CouchbaseDriverProperty;
 
 import java.nio.file.Paths;
-import java.sql.SQLTimeoutException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -154,27 +152,33 @@ public class ConnectionManager {
       });
 
       LOGGER.fine("Incrementing Handle Count to " + newHandleCount + " for Coordinate " + coordinate);
-    }
 
-    return clusterCache.computeIfAbsent(
-      coordinate.connectionString(),
-      s -> {
-        Cluster c = Cluster.connect(
-          coordinate.connectionString(),
-          clusterOptions(coordinate.authenticator()).environment(environment)
-        );
+      return clusterCache.computeIfAbsent(
+        coordinate.connectionString(),
+        s -> {
+          Cluster c = Cluster.connect(
+            coordinate.connectionString(),
+            clusterOptions(coordinate.authenticator()).environment(environment)
+          );
 
-        String connectTimeout = CouchbaseDriverProperty.CONNECT_TIMEOUT.get(coordinate.properties());
-        if (connectTimeout != null && !connectTimeout.isEmpty()) {
-          LOGGER.fine("Applying WaitUntilReady timeout (connectTimeout) of " + connectTimeout);
-          c.waitUntilReady(Golang.parseDuration(connectTimeout));
-        } else {
-          LOGGER.fine("No connectTimeout set, so not performing waitUntilReady");
+          try {
+            Duration connectTimeout = coordinate.connectTimeout();
+            if (connectTimeout != null && !connectTimeout.isZero()) {
+              LOGGER.fine("Applying WaitUntilReady timeout (connectTimeout) of " + connectTimeout);
+              c.waitUntilReady(connectTimeout);
+            } else {
+              LOGGER.fine("No connectTimeout set, so not performing waitUntilReady");
+            }
+          } catch(final Exception x) {
+            c.disconnect();
+            decrementHandleCount(coordinate);
+            throw x;
+          }
+
+          return c;
         }
-
-        return c;
-      }
-    );
+      );
+    }
   }
 
   /**
@@ -183,15 +187,7 @@ public class ConnectionManager {
    * @param coordinate the coordinate to close the connection for.
    */
   public synchronized void maybeClose(final ConnectionCoordinate coordinate) {
-    long newHandleCount = openHandles.compute(coordinate.connectionString(), (k, v) -> {
-      if (v == null) {
-        throw new IllegalStateException("No handle present for Coordinate, this should have not happened! " + coordinate);
-      } else {
-        return v - 1;
-      }
-    });
-
-    LOGGER.fine("Decrementing Handle Count to " + newHandleCount + " for Coordinate " + coordinate);
+    long newHandleCount = decrementHandleCount(coordinate);
 
     if (newHandleCount <= 0) {
       LOGGER.fine("Coordinate " + coordinate + " reached count 0, disconnecting Cluster instance.");
@@ -201,6 +197,19 @@ public class ConnectionManager {
         toRemove.disconnect();
       }
     }
+  }
+
+  private long decrementHandleCount(final ConnectionCoordinate coordinate) {
+    long newHandleCount = openHandles.compute(coordinate.connectionString(), (k, v) -> {
+      if (v == null) {
+        throw new IllegalStateException("No handle present for Coordinate, this should have not happened! " + coordinate);
+      } else {
+        return v - 1;
+      }
+    });
+
+    LOGGER.fine("Decrementing Handle Count to " + newHandleCount + " for Coordinate " + coordinate);
+    return newHandleCount;
   }
 
 }

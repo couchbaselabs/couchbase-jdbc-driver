@@ -16,6 +16,7 @@
 
 package com.couchbase.client.jdbc.analytics;
 
+import com.couchbase.client.core.util.Golang;
 import com.couchbase.client.jdbc.CouchbaseDriver;
 import com.couchbase.client.jdbc.CouchbaseDriverProperty;
 import org.apache.asterix.jdbc.core.ADBDriverProperty;
@@ -23,6 +24,7 @@ import org.apache.asterix.jdbc.core.ADBDriverProperty;
 import javax.sql.DataSource;
 import java.io.PrintWriter;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -117,8 +119,26 @@ public class AnalyticsDataSource implements DataSource {
       );
     }
 
+    String connectTimeout = CouchbaseDriverProperty.CONNECT_TIMEOUT.get(properties);
+    if (connectTimeout == null) {
+      if (getLoginTimeout() > 0) {
+        connectTimeout = getLoginTimeout() + "s";
+      } else if (DriverManager.getLoginTimeout() > 0) {
+        connectTimeout = DriverManager.getLoginTimeout() + "s";
+      }
+    }
+
+    if (connectTimeout != null) {
+        adbProperties.setProperty(
+          ADBDriverProperty.Common.CONNECT_TIMEOUT.getPropertyName(),
+          Long.toString(Golang.parseDuration(connectTimeout).getSeconds())
+        );
+    }
+
     return analyticsDriver.connect(url, adbProperties);
   }
+
+
 
   @Override
   public final boolean isWrapperFor(Class<?> iface) {

@@ -19,6 +19,7 @@ package com.couchbase.client.jdbc.sdk;
 import com.couchbase.client.core.env.Authenticator;
 import com.couchbase.client.core.env.PasswordAuthenticator;
 
+import java.time.Duration;
 import java.util.Properties;
 
 import static com.couchbase.client.core.util.Validators.notNull;
@@ -32,15 +33,17 @@ public class ConnectionCoordinate {
   private final String connectionString;
   private final Authenticator authenticator;
   private final Properties properties;
+  private final Duration connectTimeout;
 
-  public static ConnectionCoordinate create(String connectionString, String username, String password, Properties properties) {
-    return new ConnectionCoordinate(connectionString, PasswordAuthenticator.create(username, password), properties);
+  public static ConnectionCoordinate create(String connectionString, String username, String password, Properties properties, Duration connectTimeout) {
+    return new ConnectionCoordinate(connectionString, PasswordAuthenticator.create(username, password), properties, connectTimeout);
   }
 
-  private ConnectionCoordinate(String connectionString, Authenticator authenticator, Properties properties) {
+  private ConnectionCoordinate(String connectionString, Authenticator authenticator, Properties properties, Duration connectTimeout) {
     this.connectionString = notNullOrEmpty(connectionString, "ConnectionString");
     this.authenticator = notNull(authenticator, "Authenticator");
     this.properties = properties == null ? new Properties() : properties;
+    this.connectTimeout = connectTimeout;
   }
 
   public String connectionString() {
@@ -53,6 +56,10 @@ public class ConnectionCoordinate {
 
   public Properties properties() {
     return properties;
+  }
+
+  public Duration connectTimeout() {
+    return connectTimeout;
   }
 
   @Override

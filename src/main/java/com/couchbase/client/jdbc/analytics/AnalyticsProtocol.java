@@ -97,9 +97,12 @@ public class AnalyticsProtocol extends ADBProtocolBase {
       connectionString = connectionString + ":" + port;
     }
 
-    this.connectionHandle = ConnectionManager.INSTANCE.handle(
-      ConnectionCoordinate.create(connectionString, user, password, properties)
-    );
+    Integer connectTimeout = (Integer) ADBDriverProperty.Common.CONNECT_TIMEOUT.fetchPropertyValue(params);
+    Duration parsedTimeout = connectTimeout != null ? Duration.ofSeconds(connectTimeout) : Duration.ZERO;
+
+    this.connectionHandle = ConnectionManager.INSTANCE.handle(ConnectionCoordinate.create(
+      connectionString, user, password, properties, parsedTimeout
+    ));
   }
 
   @Override
