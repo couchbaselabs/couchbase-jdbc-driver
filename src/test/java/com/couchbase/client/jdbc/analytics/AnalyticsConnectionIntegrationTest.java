@@ -20,19 +20,17 @@ import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class AnalyticsConnectionIntegrationTest extends BaseAnalyticsIntegrationTest {
 
   @Test
   void usesDefaultConnectionProperties() throws Exception {
-    Connection connection = DriverManager.getConnection("jdbc:couchbase:analytics", username(), password());
-    assertEquals("Default", connection.getCatalog());
-    assertNull(connection.getSchema());
-
-    connection = DriverManager.getConnection("jdbc:couchbase:analytics://" + hostname(), username(), password());
+    Connection connection = DriverManager.getConnection("jdbc:couchbase:analytics://" + hostname(), username(), password());
     assertEquals("Default", connection.getCatalog());
     assertNull(connection.getSchema());
   }
@@ -60,6 +58,19 @@ class AnalyticsConnectionIntegrationTest extends BaseAnalyticsIntegrationTest {
 
     connection = DriverManager.getConnection("jdbc:couchbase:analytics://" + hostname() + "/foo" + args, username(), password());
     assertEquals("foo", connection.getCatalog());
+    assertNull(connection.getSchema());
+  }
+
+  @Test
+  void failsWithUnknownNamespace() {
+    assertThrows(SQLException.class, () -> DriverManager.getConnection("jdbc:foo:analytics://" + hostname(), username(), password()));
+    assertThrows(SQLException.class, () -> DriverManager.getConnection("jdbc:couchbase:bar://" + hostname(), username(), password()));
+  }
+
+  @Test
+  void supportsAlternativeNamespace() throws Exception {
+    Connection connection = DriverManager.getConnection("jdbc:cb:analytics://" + hostname(), username(), password());
+    assertEquals("Default", connection.getCatalog());
     assertNull(connection.getSchema());
   }
 

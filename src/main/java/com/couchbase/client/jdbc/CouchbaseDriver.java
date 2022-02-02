@@ -53,10 +53,19 @@ public final class CouchbaseDriver implements Driver {
 
   public static final Logger PARENT_LOGGER = Logger.getLogger("com.couchbase.client.jdbc");
 
-  public static final String QUERY_URL_PREFIX = "jdbc:couchbase:query";
+  /**
+   * The main prefix that should be used when addressing the JDBC driver.
+   */
+  public static final String MAIN_JDBC_PREFIX = "jdbc:couchbase:";
 
-  public static final String ANALYTICS_SCHEME = "couchbase:analytics";
-  public static final String ANALYTICS_URL_PREFIX = "jdbc:" + ANALYTICS_SCHEME;
+  /**
+   * The fallback prefix this driver listens to, which can be used in environments where name clashes
+   * with other couchbase JDBC drivers are possible.
+   */
+  public static final String FALLBACK_JDBC_PREFIX = "jdbc:cb:";
+
+  public static final String QUERY_NAMESPACE = "query";
+  public static final String ANALYTICS_NAMESPACE = "analytics";
 
   public static final AtomicReference<String> DRIVER_VERSION = new AtomicReference<>("");
   public static final AtomicInteger DRIVER_MAJOR_VERSION = new AtomicInteger(0);
@@ -149,7 +158,7 @@ public final class CouchbaseDriver implements Driver {
       schema = components.schema();
     }
 
-    if (url.startsWith(ANALYTICS_URL_PREFIX)) {
+    if (startsWithPrefix(url, true)) {
       return AnalyticsDataSource
         .builder()
         .hostname(hostname)
@@ -165,7 +174,7 @@ public final class CouchbaseDriver implements Driver {
 
   @Override
   public boolean acceptsURL(String url) {
-    return url.startsWith(ANALYTICS_URL_PREFIX);
+    return startsWithPrefix(url, true);
   }
 
   @Override
@@ -208,10 +217,18 @@ public final class CouchbaseDriver implements Driver {
       urlServer = url.substring(0, qPos);
     }
 
-    if (urlServer.startsWith(ANALYTICS_URL_PREFIX)) {
-      urlServer = urlServer.substring(ANALYTICS_URL_PREFIX.length());
+    if (startsWithPrefix(urlServer, true)) {
+      if (startsWithMainPrefix(urlServer, true)) {
+        urlServer = urlServer.substring((MAIN_JDBC_PREFIX + ANALYTICS_NAMESPACE).length());
+      } else {
+        urlServer = urlServer.substring((FALLBACK_JDBC_PREFIX + ANALYTICS_NAMESPACE).length());
+      }
     } else {
-      urlServer = urlServer.substring(QUERY_URL_PREFIX.length());
+      if (startsWithMainPrefix(urlServer, false)) {
+        urlServer = urlServer.substring((MAIN_JDBC_PREFIX + QUERY_NAMESPACE).length());
+      } else {
+        urlServer = urlServer.substring((FALLBACK_JDBC_PREFIX + QUERY_NAMESPACE).length());
+      }
     }
 
     if (urlServer.startsWith("://")) {
@@ -267,6 +284,18 @@ public final class CouchbaseDriver implements Driver {
     }
 
     return urlProps;
+  }
+
+  private static boolean startsWithPrefix(final String url, final boolean analytics) {
+    return startsWithMainPrefix(url, analytics) || startsWithFallbackPrefix(url, analytics);
+  }
+
+  private static boolean startsWithMainPrefix(final String url, final boolean analytics) {
+    return url.startsWith(MAIN_JDBC_PREFIX + (analytics ? ANALYTICS_NAMESPACE : QUERY_NAMESPACE));
+  }
+
+  private static boolean startsWithFallbackPrefix(final String url, final boolean analytics) {
+    return url.startsWith(FALLBACK_JDBC_PREFIX + (analytics ? ANALYTICS_NAMESPACE : QUERY_NAMESPACE));
   }
 
   static class HostComponents {
