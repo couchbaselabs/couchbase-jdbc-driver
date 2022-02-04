@@ -20,6 +20,7 @@ import com.couchbase.client.core.env.Authenticator;
 import com.couchbase.client.core.env.PasswordAuthenticator;
 
 import java.time.Duration;
+import java.util.Objects;
 import java.util.Properties;
 
 import static com.couchbase.client.core.util.Validators.notNull;
@@ -31,17 +32,24 @@ import static com.couchbase.client.core.util.Validators.notNullOrEmpty;
 public class ConnectionCoordinate {
 
   private final String connectionString;
+  private final String username;
+  private final String password;
   private final Authenticator authenticator;
+
   private final Properties properties;
   private final Duration connectTimeout;
 
-  public static ConnectionCoordinate create(String connectionString, String username, String password, Properties properties, Duration connectTimeout) {
-    return new ConnectionCoordinate(connectionString, PasswordAuthenticator.create(username, password), properties, connectTimeout);
+  public static ConnectionCoordinate create(String connectionString, String username, String password,
+                                            Properties properties, Duration connectTimeout) {
+    return new ConnectionCoordinate(connectionString, username, password, properties, connectTimeout);
   }
 
-  private ConnectionCoordinate(String connectionString, Authenticator authenticator, Properties properties, Duration connectTimeout) {
+  private ConnectionCoordinate(String connectionString, String username, String password, Properties properties,
+                               Duration connectTimeout) {
     this.connectionString = notNullOrEmpty(connectionString, "ConnectionString");
-    this.authenticator = notNull(authenticator, "Authenticator");
+    this.username = username;
+    this.password = password;
+    this.authenticator = notNull(PasswordAuthenticator.create(username, password), "Authenticator");
     this.properties = properties == null ? new Properties() : properties;
     this.connectTimeout = connectTimeout;
   }
@@ -69,5 +77,19 @@ public class ConnectionCoordinate {
       ", authenticator=" + authenticator.getClass() +
       ", properties=" + properties +
       '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    ConnectionCoordinate that = (ConnectionCoordinate) o;
+    return Objects.equals(connectionString, that.connectionString) && Objects.equals(username, that.username)
+      && Objects.equals(password, that.password);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(connectionString, username, password);
   }
 }

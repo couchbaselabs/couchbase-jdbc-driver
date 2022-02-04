@@ -22,7 +22,6 @@ import com.couchbase.client.core.env.LoggerConfig;
 import com.couchbase.client.core.env.PropertyLoader;
 import com.couchbase.client.core.env.SecurityConfig;
 import com.couchbase.client.core.env.SystemPropertyPropertyLoader;
-import com.couchbase.client.core.util.Golang;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.env.ClusterEnvironment;
 import com.couchbase.client.jdbc.CouchbaseDriverProperty;
@@ -53,8 +52,8 @@ public class ConnectionManager {
    */
   public static ConnectionManager INSTANCE = new ConnectionManager();
 
-  private final Map<String, Cluster> clusterCache = new ConcurrentHashMap<>();
-  private final Map<String, Long> openHandles = new ConcurrentHashMap<>();
+  private final Map<ConnectionCoordinate, Cluster> clusterCache = new ConcurrentHashMap<>();
+  private final Map<ConnectionCoordinate, Long> openHandles = new ConcurrentHashMap<>();
 
   private volatile ClusterEnvironment environment;
 
@@ -143,7 +142,7 @@ public class ConnectionManager {
           .build();
       }
 
-      long newHandleCount = openHandles.compute(coordinate.connectionString(), (k, v) -> {
+      long newHandleCount = openHandles.compute(coordinate, (k, v) -> {
         if (v == null) {
           return 1L;
         } else {
@@ -154,7 +153,7 @@ public class ConnectionManager {
       LOGGER.fine("Incrementing Handle Count to " + newHandleCount + " for Coordinate " + coordinate);
 
       return clusterCache.computeIfAbsent(
-        coordinate.connectionString(),
+        coordinate,
         s -> {
           Cluster c = Cluster.connect(
             coordinate.connectionString(),
@@ -169,7 +168,7 @@ public class ConnectionManager {
             } else {
               LOGGER.fine("No connectTimeout set, so not performing waitUntilReady");
             }
-          } catch(final Exception x) {
+          } catch (final Exception x) {
             c.disconnect();
             decrementHandleCount(coordinate);
             throw x;
@@ -192,7 +191,7 @@ public class ConnectionManager {
     if (newHandleCount <= 0) {
       LOGGER.fine("Coordinate " + coordinate + " reached count 0, disconnecting Cluster instance.");
 
-      Cluster toRemove = clusterCache.remove(coordinate.connectionString());
+      Cluster toRemove = clusterCache.remove(coordinate);
       if(toRemove != null) {
         toRemove.disconnect();
       }
@@ -200,7 +199,7 @@ public class ConnectionManager {
   }
 
   private long decrementHandleCount(final ConnectionCoordinate coordinate) {
-    long newHandleCount = openHandles.compute(coordinate.connectionString(), (k, v) -> {
+    long newHandleCount = openHandles.compute(coordinate, (k, v) -> {
       if (v == null) {
         throw new IllegalStateException("No handle present for Coordinate, this should have not happened! " + coordinate);
       } else {
