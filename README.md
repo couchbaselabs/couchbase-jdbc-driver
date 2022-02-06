@@ -10,4 +10,5 @@ Right now it is a **work in progress** and can only be obtained through the sour
 
 ## Usage: Analytics
 
- - JDBC URL Prefix: `jdbc:couchbase:analytics`
+ - **Current Version:** `0.2.0`
+ - JDBC URL Prefix: `jdbc:couchbase:analytics` or `jdbc:cb:analytics` as a fallback.
