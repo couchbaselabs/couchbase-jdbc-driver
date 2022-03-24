@@ -12,7 +12,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
-        <couchbase-sdk.version>3.2.5</couchbase-sdk.version>
+        <couchbase-sdk.version>3.2.6</couchbase-sdk.version>
         <asterix-jdbc.version>0.9.7-SNAPSHOT</asterix-jdbc.version>
     </properties>
 
@@ -72,7 +72,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.9.0</version>
+                <version>3.10.1</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -82,7 +82,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.3.1</version>
+                <version>3.3.2</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
