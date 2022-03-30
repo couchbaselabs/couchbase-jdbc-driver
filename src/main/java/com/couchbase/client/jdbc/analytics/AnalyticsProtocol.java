@@ -137,8 +137,7 @@ public class AnalyticsProtocol extends ADBProtocolBase {
   }
 
   @Override
-  public QueryServiceResponse submitStatement(final String sql, final List<?> args, final UUID executionId,
-                                              final SubmitStatementOptions options) throws SQLException {
+  public QueryServiceResponse submitStatement(final String sql, final List<?> args, final SubmitStatementOptions options) throws SQLException {
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream(512);
     try {
@@ -166,8 +165,8 @@ public class AnalyticsProtocol extends ADBProtocolBase {
       if (options.dataverseName != null) {
         jsonGen.writeStringField(DATAVERSE, options.dataverseName);
       }
-      if (executionId != null) {
-        jsonGen.writeStringField(CLIENT_CONTEXT_ID, executionId.toString());
+      if (options.executionId != null) {
+        jsonGen.writeStringField(CLIENT_CONTEXT_ID, options.executionId.toString());
       }
       if(scanWait != null && !scanWait.isEmpty()) {
         jsonGen.writeStringField(SCAN_WAIT, scanWait);
@@ -195,20 +194,13 @@ public class AnalyticsProtocol extends ADBProtocolBase {
         options.compileOnly ? "compile" : "execute", sql, args != null ? args : ""));
     }
 
-    // By default, JDBC mandates an infinite timeout, but the SDK will set it to 75s.
-    // So if 0 from the adb layer, set it to MAX_VALUE to effectively simulate the
-    // same duration.
-    Duration timeout = options.timeoutSeconds > 0
-      ? Duration.ofSeconds(options.timeoutSeconds)
-      : Duration.ofNanos(Long.MAX_VALUE);
-
     try {
       CoreHttpResponse coreHttpResponse = connectionHandle.rawAnalyticsQuery(
         ConnectionHandle.HttpMethod.POST,
         QUERY_SERVICE_ENDPOINT_PATH,
         headers,
         baos.toByteArray(),
-        timeout
+        getTimeout(options)
       );
 
       return driverContext.getGenericObjectReader()
@@ -221,8 +213,17 @@ public class AnalyticsProtocol extends ADBProtocolBase {
     }
   }
 
+  private Duration getTimeout(SubmitStatementOptions options) {
+    // By default, JDBC mandates an infinite timeout, but the SDK will set it to 75s.
+    // So if 0 from the adb layer, set it to MAX_VALUE to effectively simulate the
+    // same duration.
+    return options.timeoutSeconds > 0
+      ? Duration.ofSeconds(options.timeoutSeconds)
+      : Duration.ofNanos(Long.MAX_VALUE);
+  }
+
   @Override
-  public JsonParser fetchResult(QueryServiceResponse response) throws SQLException {
+  public JsonParser fetchResult(QueryServiceResponse response, SubmitStatementOptions options) throws SQLException {
     int p = response.handle.lastIndexOf("/");
     if (p < 0) {
       throw new SQLNonTransientConnectionException("Protocol error - could not extract deferred ID");
@@ -234,7 +235,7 @@ public class AnalyticsProtocol extends ADBProtocolBase {
       QUERY_RESULT_ENDPOINT_PATH + handlePath,
       Collections.emptyMap(),
       null,
-      null
+      getTimeout(options)
     );
 
     try {
