@@ -16,8 +16,15 @@
 
 package com.couchbase.client.jdbc.analytics;
 
+import com.couchbase.client.core.Core;
+import com.couchbase.client.core.CoreContext;
+import com.couchbase.client.core.deps.io.netty.handler.codec.http.HttpMethod;
+import com.couchbase.client.core.deps.io.netty.util.concurrent.DefaultThreadFactory;
 import com.couchbase.client.core.endpoint.http.CoreHttpResponse;
 import com.couchbase.client.core.error.InvalidArgumentException;
+import com.couchbase.client.core.msg.analytics.AnalyticsChunkRow;
+import com.couchbase.client.core.msg.analytics.AnalyticsRequest;
+import com.couchbase.client.core.msg.analytics.AnalyticsResponse;
 import com.couchbase.client.core.util.Golang;
 import com.couchbase.client.jdbc.CouchbaseDriver;
 import com.couchbase.client.jdbc.CouchbaseDriverProperty;
@@ -28,7 +35,6 @@ import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import org.apache.asterix.jdbc.core.ADBDriverContext;
 import org.apache.asterix.jdbc.core.ADBDriverProperty;
@@ -36,6 +42,9 @@ import org.apache.asterix.jdbc.core.ADBProtocolBase;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
 import java.time.Duration;
@@ -45,7 +54,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 
 public class AnalyticsProtocol extends ADBProtocolBase {
 
@@ -61,6 +74,10 @@ public class AnalyticsProtocol extends ADBProtocolBase {
 
   private final String scanConsistency;
   private final String scanWait;
+
+  private final ExecutorService rowExecutor = Executors.newCachedThreadPool(
+    new DefaultThreadFactory("cb-row-processor")
+  );
 
   AnalyticsProtocol(final Properties properties, final String hostname, final int port,
                     final ADBDriverContext driverContext, final Map<ADBDriverProperty, Object> params) {
@@ -113,6 +130,7 @@ public class AnalyticsProtocol extends ADBProtocolBase {
   @Override
   public void close() {
     connectionHandle.close();
+    rowExecutor.shutdown();
   }
 
   @Override
@@ -230,45 +248,57 @@ public class AnalyticsProtocol extends ADBProtocolBase {
     }
     String handlePath = response.handle.substring(p);
 
-    CoreHttpResponse coreHttpResponse = connectionHandle.rawAnalyticsQuery(
-      ConnectionHandle.HttpMethod.GET,
-      QUERY_RESULT_ENDPOINT_PATH + handlePath,
-      Collections.emptyMap(),
-      null,
-      getTimeout(options)
-    );
+    Core core = connectionHandle.core();
+    CoreContext ctx = core.context();
+    AnalyticsRequest request = new AnalyticsRequest(getTimeout(options), ctx, ctx.environment().retryStrategy(),
+      ctx.authenticator(), null, AnalyticsRequest.NO_PRIORITY, true, UUID.randomUUID().toString(),
+      "", null, null, null, QUERY_RESULT_ENDPOINT_PATH + handlePath,
+      HttpMethod.GET);
+
+    core.send(request);
 
     try {
-      JsonParser parser = driverContext.getGenericObjectReader().getFactory().createParser(coreHttpResponse.content());
+      AnalyticsResponse analyticsResponse = request.response().get();
 
-      if (!advanceToResults(parser)) {
-        throw new SQLNonTransientConnectionException("Protocol error - could not advance to RESULT");
-      }
+      PipedOutputStream pos = new PipedOutputStream();
+      InputStream is = new PipedInputStream(pos);
 
-      return parser;
+      rowExecutor.submit(() -> {
+        try {
+          final AtomicBoolean first = new AtomicBoolean(true);
+          Stream<AnalyticsChunkRow> rows = analyticsResponse.rows().toStream();
+          pos.write('[');
+
+          rows.forEach(row -> {
+            try {
+              if (!first.compareAndSet(true, false)) {
+                pos.write(',');
+              }
+              pos.write(row.data());
+            } catch (IOException e) {
+              throw new RuntimeException("Failed to parse JSON row", e);
+            }
+          });
+
+          pos.write(']');
+        } catch (Exception e) {
+          throw new RuntimeException("Failure during streaming rows", e);
+        } finally {
+          try {
+            pos.close();
+          } catch (IOException e) {
+            // ignored.
+          }
+        }
+      });
+
+      return driverContext.getGenericObjectReader().getFactory().createParser(is);
     } catch (JsonProcessingException e) {
       throw getErrorReporter().errorInProtocol(e);
     } catch (IOException e) {
       throw getErrorReporter().errorInConnection(e);
-    }
-  }
-
-  private boolean advanceToResults(JsonParser parser) throws IOException {
-    if (parser.nextToken() != JsonToken.START_OBJECT) {
-      return false;
-    }
-    for (;;) {
-      JsonToken token = parser.nextValue();
-      if (token == null || token == JsonToken.END_OBJECT) {
-        return false;
-      }
-      if (parser.currentName().equals(RESULTS)) {
-        return token == JsonToken.START_ARRAY;
-      } else if (token.isStructStart()) {
-        parser.skipChildren();
-      } else {
-        parser.nextToken();
-      }
+    } catch (Exception e) {
+      throw getErrorReporter().errorInConnection(e.getMessage());
     }
   }
 

@@ -16,6 +16,7 @@
 
 package com.couchbase.client.jdbc.sdk;
 
+import com.couchbase.client.core.Core;
 import com.couchbase.client.core.cnc.Context;
 import com.couchbase.client.core.deps.com.fasterxml.jackson.databind.JsonNode;
 import com.couchbase.client.core.endpoint.http.CoreCommonOptions;
@@ -46,6 +47,10 @@ public class ConnectionHandle {
   ConnectionHandle(Cluster cluster, ConnectionCoordinate coordinate) {
     this.cluster = cluster;
     this.coordinate = coordinate;
+  }
+
+  public Core core() {
+    return cluster.core();
   }
 
   /**

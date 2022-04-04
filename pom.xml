@@ -12,7 +12,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
-        <couchbase-sdk.version>3.2.6</couchbase-sdk.version>
+        <couchbase-sdk.version>3.2.7-SNAPSHOT</couchbase-sdk.version>
         <asterix-jdbc.version>0.9.8-SNAPSHOT</asterix-jdbc.version>
     </properties>
 
