@@ -60,6 +60,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 
+import static com.couchbase.client.java.AsyncUtils.block;
+
 public class AnalyticsProtocol extends ADBProtocolBase {
 
   private static final String SCAN_WAIT = "scan_wait";
@@ -258,7 +260,7 @@ public class AnalyticsProtocol extends ADBProtocolBase {
     core.send(request);
 
     try {
-      AnalyticsResponse analyticsResponse = request.response().get();
+      AnalyticsResponse analyticsResponse = block(request.response());
 
       PipedOutputStream pos = new PipedOutputStream();
       InputStream is = new PipedInputStream(pos);
