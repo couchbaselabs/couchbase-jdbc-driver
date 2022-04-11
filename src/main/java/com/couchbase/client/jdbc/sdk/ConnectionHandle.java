@@ -23,12 +23,14 @@ import com.couchbase.client.core.endpoint.http.CoreCommonOptions;
 import com.couchbase.client.core.endpoint.http.CoreHttpClient;
 import com.couchbase.client.core.endpoint.http.CoreHttpRequest;
 import com.couchbase.client.core.endpoint.http.CoreHttpResponse;
+import com.couchbase.client.core.error.AuthenticationFailureException;
 import com.couchbase.client.core.error.CouchbaseException;
 import com.couchbase.client.core.json.Mapper;
 import com.couchbase.client.core.msg.RequestTarget;
 import com.couchbase.client.java.Cluster;
 
 import java.sql.SQLException;
+import java.sql.SQLInvalidAuthorizationSpecException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -70,6 +72,12 @@ public class ConnectionHandle {
     try {
       JsonNode root = Mapper.decodeIntoTree(exec.get().content());
       return root.get("implementationVersion").asText();
+    } catch (ExecutionException ex) {
+      if (ex.getCause() instanceof AuthenticationFailureException) {
+        throw new SQLInvalidAuthorizationSpecException("Authentication/authorization error (failed to fetch cluster version)", "28000", ex);
+      } else {
+        throw new SQLException("Failed to fetch cluster version", ex);
+      }
     } catch (Exception e) {
       throw new SQLException("Failed to fetch cluster version", e);
     }

@@ -16,6 +16,7 @@
 
 package com.couchbase.client.jdbc.analytics;
 
+import com.couchbase.client.core.error.AuthenticationFailureException;
 import com.couchbase.client.core.error.TimeoutException;
 import com.couchbase.client.jdbc.CouchbaseDriver;
 import org.apache.asterix.jdbc.core.ADBDriverBase;
@@ -26,6 +27,7 @@ import org.apache.asterix.jdbc.core.ADBProtocolBase;
 
 import java.net.URI;
 import java.sql.SQLException;
+import java.sql.SQLInvalidAuthorizationSpecException;
 import java.sql.SQLTimeoutException;
 import java.util.Map;
 import java.util.Properties;
@@ -51,6 +53,8 @@ public class AnalyticsDriver extends ADBDriverBase {
       return new AnalyticsProtocol(properties, hostname, port, ctx, map);
     } catch (TimeoutException ex) {
       throw new SQLTimeoutException("Could not connect to the Cluster in the given connectTimeout interval.", ex);
+    } catch (AuthenticationFailureException ex) {
+      throw new SQLInvalidAuthorizationSpecException("Authentication/authorization error", "28000", ex);
     }
   }
 

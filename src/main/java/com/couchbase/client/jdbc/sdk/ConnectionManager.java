@@ -17,19 +17,29 @@
 package com.couchbase.client.jdbc.sdk;
 
 import com.couchbase.client.core.deps.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import com.couchbase.client.core.diagnostics.DiagnosticsResult;
+import com.couchbase.client.core.diagnostics.EndpointDiagnostics;
 import com.couchbase.client.core.env.CoreEnvironment;
 import com.couchbase.client.core.env.LoggerConfig;
 import com.couchbase.client.core.env.PropertyLoader;
 import com.couchbase.client.core.env.SecurityConfig;
 import com.couchbase.client.core.env.SystemPropertyPropertyLoader;
+import com.couchbase.client.core.error.AuthenticationFailureException;
+import com.couchbase.client.core.msg.Request;
+import com.couchbase.client.core.msg.Response;
+import com.couchbase.client.core.retry.BestEffortRetryStrategy;
+import com.couchbase.client.core.retry.RetryAction;
+import com.couchbase.client.core.retry.RetryReason;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.env.ClusterEnvironment;
 import com.couchbase.client.jdbc.CouchbaseDriverProperty;
 
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -139,6 +149,7 @@ public class ConnectionManager {
             new SystemPropertyPropertyLoader(coordinate.properties()).load(builder))
           .loggerConfig(loggerConfig)
           .securityConfig(securityConfig)
+          .retryStrategy(new InterceptingRetryStrategy())
           .build();
       }
 
@@ -169,15 +180,52 @@ public class ConnectionManager {
               LOGGER.fine("No connectTimeout set, so not performing waitUntilReady");
             }
           } catch (final Exception x) {
+            DiagnosticsResult diagnostics = c.diagnostics();
             c.disconnect();
             decrementHandleCount(coordinate);
-            throw x;
+            if (hasAuthFailure(diagnostics)) {
+              throw new AuthenticationFailureException("Authentication/authorization error", null, x);
+            } else {
+              throw x;
+            }
           }
 
           return c;
         }
       );
     }
+  }
+
+  /**
+   * Check if the diagnostic result contains an auth failure.
+   *
+   * @param result the result to check.
+   * @return true if it does.
+   */
+  private static boolean hasAuthFailure(final DiagnosticsResult result) {
+    if (result == null) {
+      return false;
+    }
+
+    for (List<EndpointDiagnostics> endpoints : result.endpoints().values()) {
+      for (EndpointDiagnostics diagnostics : endpoints) {
+        if (hasAuthFailure(diagnostics.lastConnectAttemptFailure())) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Check if the throwable itself is present and an auth error.
+   *
+   * @param lastError the throwable to check.
+   * @return true if it is present and an auth error.
+   */
+  static boolean hasAuthFailure(final Optional<Throwable> lastError) {
+    return lastError.isPresent() && lastError.get() instanceof AuthenticationFailureException;
   }
 
   /**
@@ -209,6 +257,30 @@ public class ConnectionManager {
 
     LOGGER.fine("Decrementing Handle Count to " + newHandleCount + " for Coordinate " + coordinate);
     return newHandleCount;
+  }
+
+  /**
+   * This retry strategy checks on a retry attempt if the diagnostics report auth failures - and if so short-circuits
+   * the request instead of continuing until timeout.
+   */
+  static class InterceptingRetryStrategy extends BestEffortRetryStrategy {
+    @Override
+    public CompletableFuture<RetryAction> shouldRetry(final Request<? extends Response> request,
+                                                      final RetryReason reason) {
+      boolean isAuthError = request
+        .context()
+        .core()
+        .diagnostics()
+        .anyMatch(ed -> hasAuthFailure(ed.lastConnectAttemptFailure()));
+
+      if (isAuthError) {
+        return CompletableFuture.completedFuture(
+          RetryAction.noRetry(t -> new AuthenticationFailureException("Authentication failure detected", null, t))
+        );
+      } else {
+        return super.shouldRetry(request, reason);
+      }
+    }
   }
 
 }

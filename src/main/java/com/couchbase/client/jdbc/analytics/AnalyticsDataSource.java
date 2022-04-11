@@ -138,8 +138,6 @@ public class AnalyticsDataSource implements DataSource {
     return analyticsDriver.connect(url, adbProperties);
   }
 
-
-
   @Override
   public final boolean isWrapperFor(Class<?> iface) {
     return iface.isInstance(this);
