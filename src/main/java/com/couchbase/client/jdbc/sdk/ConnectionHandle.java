@@ -30,13 +30,13 @@ import com.couchbase.client.core.msg.RequestTarget;
 import com.couchbase.client.java.Cluster;
 
 import java.sql.SQLException;
-import java.sql.SQLInvalidAuthorizationSpecException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static com.couchbase.client.core.endpoint.http.CoreHttpPath.path;
+import static com.couchbase.client.jdbc.ErrorUtils.authError;
 
 /**
  * Provides a handle into the SDK based on the {@link ConnectionCoordinate}.
@@ -74,7 +74,7 @@ public class ConnectionHandle {
       return root.get("implementationVersion").asText();
     } catch (ExecutionException ex) {
       if (ex.getCause() instanceof AuthenticationFailureException) {
-        throw new SQLInvalidAuthorizationSpecException("Authentication/authorization error (failed to fetch cluster version)", "28000", ex);
+        throw authError(ex);
       } else {
         throw new SQLException("Failed to fetch cluster version", ex);
       }

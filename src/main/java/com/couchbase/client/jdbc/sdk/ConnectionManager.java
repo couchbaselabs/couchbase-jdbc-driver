@@ -171,28 +171,54 @@ public class ConnectionManager {
             clusterOptions(coordinate.authenticator()).environment(environment)
           );
 
-          try {
-            Duration connectTimeout = coordinate.connectTimeout();
-            if (connectTimeout != null && !connectTimeout.isZero()) {
-              LOGGER.fine("Applying WaitUntilReady timeout (connectTimeout) of " + connectTimeout);
-              c.waitUntilReady(connectTimeout);
-            } else {
-              LOGGER.fine("No connectTimeout set, so not performing waitUntilReady");
-            }
-          } catch (final Exception x) {
-            DiagnosticsResult diagnostics = c.diagnostics();
-            c.disconnect();
-            decrementHandleCount(coordinate);
-            if (hasAuthFailure(diagnostics)) {
-              throw new AuthenticationFailureException("Authentication/authorization error", null, x);
-            } else {
-              throw x;
-            }
-          }
+          maybeWaitUntilReady(coordinate, c);
 
           return c;
         }
       );
+    }
+  }
+
+  /**
+   * Helper method to perform the wait until ready logic if needed.
+   * <p>
+   * In order to spot auth issues earlier, the actual wait until ready time is 500ms, but then we'll try up to the
+   * given connect timeout (if any) to give it the maximum amount of possible wait time. If we detect an auth
+   * failure, we bail out early.
+   *
+   * @param coordinate the coordinate.
+   * @param c the reference cluster.
+   */
+  private void maybeWaitUntilReady(final ConnectionCoordinate coordinate, final Cluster c) {
+    Duration connectTimeout = coordinate.connectTimeout();
+    if (connectTimeout == null || connectTimeout.isZero()) {
+      LOGGER.fine("No connectTimeout set, so not performing waitUntilReady");
+      return;
+    }
+
+    LOGGER.fine("Applying cumulative WaitUntilReady timeout (connectTimeout) of " + connectTimeout);
+
+    Duration waitUntilReadyTimeout = Duration.ofMillis(500);
+    Duration totalDurationSpent = Duration.ZERO;
+
+    while (true) {
+      try {
+        c.waitUntilReady(waitUntilReadyTimeout);
+        break;
+      } catch (Exception x) {
+        totalDurationSpent = totalDurationSpent.plus(waitUntilReadyTimeout);
+
+        DiagnosticsResult diagnostics = c.diagnostics();
+        if (hasAuthFailure(diagnostics)) {
+          c.disconnect();
+          decrementHandleCount(coordinate);
+          throw new AuthenticationFailureException("Authentication/authorization error - please verify credentials.", null, x);
+        } else if (totalDurationSpent.compareTo(connectTimeout) >= 0) {
+          c.disconnect();
+          decrementHandleCount(coordinate);
+          throw x;
+        }
+      }
     }
   }
 

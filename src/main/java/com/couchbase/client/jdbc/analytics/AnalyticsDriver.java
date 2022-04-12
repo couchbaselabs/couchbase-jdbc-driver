@@ -27,10 +27,11 @@ import org.apache.asterix.jdbc.core.ADBProtocolBase;
 
 import java.net.URI;
 import java.sql.SQLException;
-import java.sql.SQLInvalidAuthorizationSpecException;
 import java.sql.SQLTimeoutException;
 import java.util.Map;
 import java.util.Properties;
+
+import static com.couchbase.client.jdbc.ErrorUtils.authError;
 
 /**
  * The {@link AnalyticsDriver} provides the main entry point into the Analytics through the {@link ADBDriverBase}.
@@ -54,7 +55,7 @@ public class AnalyticsDriver extends ADBDriverBase {
     } catch (TimeoutException ex) {
       throw new SQLTimeoutException("Could not connect to the Cluster in the given connectTimeout interval.", ex);
     } catch (AuthenticationFailureException ex) {
-      throw new SQLInvalidAuthorizationSpecException("Authentication/authorization error", "28000", ex);
+      throw authError(ex);
     }
   }
 
