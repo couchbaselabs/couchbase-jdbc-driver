@@ -88,7 +88,13 @@ public class ConnectionHandle {
    * <p>
    * It should really only be used if the primary query API cannot be used for some reason.
    *
+   * @param method the http method to use.
+   * @param path the http path to execute.
+   * @param headers the optional http headers to send.
+   * @param content the optional payload to send.
+   * @param timeout the timeout to use.
    * @return the core response to use.
+   * @throws SQLException in case the query failed.
    */
   public CoreHttpResponse rawAnalyticsQuery(HttpMethod method, String path, Map<String, Object> headers, byte[] content,
                                             Duration timeout)

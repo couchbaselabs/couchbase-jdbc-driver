@@ -8,6 +8,9 @@
     <artifactId>couchbase-jdbc-driver</artifactId>
     <version>1.0.0</version>
 
+    <name>Couchbase JDBC Driver</name>
+    <description>Couchbase JDBC Driver for Couchbase Analytics</description>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>8</maven.compiler.source>
