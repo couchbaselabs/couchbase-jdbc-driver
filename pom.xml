@@ -6,7 +6,7 @@
 
     <groupId>com.couchbase.client</groupId>
     <artifactId>couchbase-jdbc-driver</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 
     <name>Couchbase JDBC Driver</name>
     <description>Couchbase JDBC Driver for Couchbase Analytics</description>
