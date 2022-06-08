@@ -6,7 +6,7 @@
 
     <groupId>com.couchbase.client</groupId>
     <artifactId>couchbase-jdbc-driver</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
 
     <name>Couchbase JDBC Driver</name>
     <description>Couchbase JDBC Driver for Couchbase Analytics</description>
@@ -16,7 +16,7 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <couchbase-sdk.version>3.3.0</couchbase-sdk.version>
-        <asterix-jdbc.version>0.9.8-SNAPSHOT</asterix-jdbc.version>
+        <asterix-jdbc.version>0.9.8</asterix-jdbc.version>
     </properties>
 
     <dependencies>
