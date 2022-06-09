@@ -19,19 +19,31 @@ package com.couchbase.client.jdbc;
 import java.sql.DriverPropertyInfo;
 import java.util.Properties;
 
+/**
+ * Properties with which the JDBC driver can be configured with.
+ */
 public enum CouchbaseDriverProperty {
+  /**
+   * The password to authenticate with.
+   */
   PASSWORD(
     "password",
     null,
     true,
     "Password to use when authenticating."
   ),
+  /**
+   * The username to authenticate with.
+   */
   USER(
     "user",
     null,
     true,
     "Username to connect to the database as"
   ),
+  /**
+   * Connect timeout that is waited until the connection is established.
+   */
   CONNECT_TIMEOUT(
     "connectTimeout",
     null,
@@ -40,6 +52,9 @@ public enum CouchbaseDriverProperty {
       "properly before giving up. If not provided the lazy bootstrap continues in the background and likely the " +
       "operation will time out at the configured value (by default 75s). The format to be used is \"10s\" or similar."
   ),
+  /**
+   * The dataverse mode for Couchbase Analytics.
+   */
   CATALOG_DATAVERSE_MODE(
     "catalogDataverseMode",
     "catalog",
@@ -48,42 +63,63 @@ public enum CouchbaseDriverProperty {
       "for the catalog, while with \"catalogSchema\" the bucket is used as a catalog and the scope as the schema.",
     new String[] { "catalog", "catalogSchema" }
   ),
+  /**
+   * If the Catalog API should also include schemaless catalogs.
+   */
   CATALOG_INCLUDE_SCHEMALESS(
     "catalogIncludesSchemaless",
     "false",
     false,
     "If the Catalog API should also include schemaless catalogs."
   ),
+  /**
+   * The maximum number of warnings that should be emitted.
+   */
   MAX_WARNINGS(
     "maxWarnings",
     "10",
     false,
     "The maximum number of warnings that should be emitted."
   ),
+  /**
+   * If Couchbase Analytics should use its SQL compatibility mode.
+   */
   SQL_COMPAT_MODE(
     "sqlCompatMode",
     "true",
     false,
     "If the analytics SQL compatibility mode should be used."
   ),
+  /**
+   * Minimally required driver version.
+   */
   MIN_DRIVER_VERSION(
     "minDriverVersion",
     null,
     false,
     "Minimally required driver version."
   ),
+  /**
+   * The minimally required database version.
+   */
   MIN_DATABASE_VERSION(
     "minDatabaseVersion",
     null,
     false,
     "Minimally required database version."
   ),
+  /**
+   * If SSL/TLS should be enabled.
+   */
   SSL(
     "ssl",
     "false",
     false,
     "Set to true if transport encryption (TLS) should be enabled."
   ),
+  /**
+   * Which TLS mode should be used (see enum for details).
+   */
   SSL_MODE(
     "sslMode",
     "verify-full",
@@ -95,24 +131,36 @@ public enum CouchbaseDriverProperty {
       "no-verify", // does not perform any verification (accepts all certs and hosts) - INSECURE!
     }
   ),
+  /**
+   * The path to the SSL certificate.
+   */
   SSL_CERT_PATH(
     "sslCertPath",
     null,
     false,
     "The absolute path to the TLS certificate."
   ),
+  /**
+   * The path to the SSL keystore.
+   */
   SSL_KEYSTORE_PATH(
     "sslKeystorePath",
     null,
     false,
     "The absolute path to the java keystore."
   ),
+  /**
+   * The SSL keystore password.
+   */
   SSL_KEYSTORE_PASSWORD(
     "sslKeystorePassword",
     null,
     false,
     "The password for the keystore."
   ),
+  /**
+   * The scan consistency which should be used for queries.
+   */
   SCAN_CONSISTENCY(
     "scanConsistency",
     null,
@@ -123,6 +171,9 @@ public enum CouchbaseDriverProperty {
       "requestPlus",
     }
   ),
+  /**
+   * The scan wait which should be used for queries.
+   */
   SCAN_WAIT(
     "scanWait",
     null,
@@ -148,10 +199,22 @@ public enum CouchbaseDriverProperty {
     this.choices = choices;
   }
 
+  /**
+   * Returns the property out of the given properties object.
+   *
+   * @param properties the properties input.
+   * @return the returned property or the default value.
+   */
   public String get(Properties properties) {
     return properties.getProperty(name, defaultValue);
   }
 
+  /**
+   * Turns properties into {@link DriverPropertyInfo}.
+   *
+   * @param properties the input properties.
+   * @return the build property info.
+   */
   public DriverPropertyInfo toDriverPropertyInfo(Properties properties) {
     DriverPropertyInfo propertyInfo = new DriverPropertyInfo(name, get(properties));
     propertyInfo.required = required;
@@ -160,6 +223,11 @@ public enum CouchbaseDriverProperty {
     return propertyInfo;
   }
 
+  /**
+   * Returns the name of the property.
+   *
+   * @return the name of the property.
+   */
   public String getName() {
     return name;
   }

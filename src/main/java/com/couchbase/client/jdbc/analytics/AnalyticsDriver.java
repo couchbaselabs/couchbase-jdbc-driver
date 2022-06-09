@@ -42,6 +42,13 @@ public class AnalyticsDriver extends ADBDriverBase {
 
   private final Properties properties;
 
+  /**
+   * Creates a new {@link AnalyticsDriver} instance.
+   *
+   * @param properties the list of properties to use.
+   * @param driverScheme the driver scheme to use.
+   * @param defaultApiPort the default API port to use.
+   */
   public AnalyticsDriver(final Properties properties, final String driverScheme, final int defaultApiPort) {
     super(driverScheme, defaultApiPort);
     this.properties = properties;

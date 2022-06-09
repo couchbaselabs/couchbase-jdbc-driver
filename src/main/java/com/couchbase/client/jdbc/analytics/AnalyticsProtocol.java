@@ -62,6 +62,9 @@ import java.util.stream.Stream;
 
 import static com.couchbase.client.java.AsyncUtils.block;
 
+/**
+ * Implements the Couchbase Analytics specific protocol on top of the {@link ADBProtocolBase}.
+ */
 public class AnalyticsProtocol extends ADBProtocolBase {
 
   private static final String SCAN_WAIT = "scan_wait";

@@ -34,6 +34,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
+/**
+ * Couchbase JDBC implementation for the {@link Driver}.
+ */
 public final class CouchbaseDriver implements Driver {
 
   /**
@@ -51,6 +54,9 @@ public final class CouchbaseDriver implements Driver {
    */
   public static final String PRODUCT_NAME = "Couchbase Server";
 
+  /**
+   * The parent logger for JDBC to use.
+   */
   public static final Logger PARENT_LOGGER = Logger.getLogger("com.couchbase.client.jdbc");
 
   /**
@@ -64,11 +70,29 @@ public final class CouchbaseDriver implements Driver {
    */
   public static final String FALLBACK_JDBC_PREFIX = "jdbc:cb:";
 
+  /**
+   * The used namespace for N1QL.
+   */
   public static final String QUERY_NAMESPACE = "query";
+
+  /**
+   * The used namespace for Couchbase Analytics.
+   */
   public static final String ANALYTICS_NAMESPACE = "analytics";
 
+  /**
+   * Holds the current driver version.
+   */
   public static final AtomicReference<String> DRIVER_VERSION = new AtomicReference<>("");
+
+  /**
+   * Holds the current driver major version.
+   */
   public static final AtomicInteger DRIVER_MAJOR_VERSION = new AtomicInteger(0);
+
+  /**
+   * Holds the current driver minor version.
+   */
   public static final AtomicInteger DRIVER_MINOR_VERSION = new AtomicInteger(0);
 
   static {

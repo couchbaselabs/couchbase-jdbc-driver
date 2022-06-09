@@ -35,10 +35,19 @@ public class ConnectionCoordinate {
   private final String username;
   private final String password;
   private final Authenticator authenticator;
-
   private final Properties properties;
   private final Duration connectTimeout;
 
+  /**
+   * Creates a new Connection Coordinate.
+   *
+   * @param connectionString the SDK connection string.
+   * @param username the SDK username.
+   * @param password the SDK password.
+   * @param properties custom SDK properties.
+   * @param connectTimeout the SDK connection timeout.
+   * @return the created coordinate.
+   */
   public static ConnectionCoordinate create(String connectionString, String username, String password,
                                             Properties properties, Duration connectTimeout) {
     return new ConnectionCoordinate(connectionString, username, password, properties, connectTimeout);
@@ -54,18 +63,38 @@ public class ConnectionCoordinate {
     this.connectTimeout = connectTimeout;
   }
 
+  /**
+   * Returns the connection string.
+   *
+   * @return the connection string.
+   */
   public String connectionString() {
     return connectionString;
   }
 
+  /**
+   * The authenticator.
+   *
+   * @return the authenticator.
+   */
   public Authenticator authenticator() {
     return authenticator;
   }
 
+  /**
+   * All current used properties.
+   *
+   * @return the used properties.
+   */
   public Properties properties() {
     return properties;
   }
 
+  /**
+   * The used connect timeout.
+   *
+   * @return the used connect timeout.
+   */
   public Duration connectTimeout() {
     return connectTimeout;
   }

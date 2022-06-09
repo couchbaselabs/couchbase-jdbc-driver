@@ -35,6 +35,9 @@ import java.util.logging.Logger;
  */
 public class AnalyticsDataSource implements DataSource {
 
+  /**
+   * Holds the default CATALOG name.
+   */
   public static final String DEFAULT_CATALOG = "Default";
 
   private final String hostname;
@@ -43,6 +46,11 @@ public class AnalyticsDataSource implements DataSource {
   private final String schema;
   private final AnalyticsDriver analyticsDriver;
 
+  /**
+   * Returns the builder for this {@link AnalyticsDataSource}.
+   *
+   * @return the analytics data source builder.
+   */
   public static AnalyticsDataSource.Builder builder() {
     return new Builder();
   }
@@ -180,27 +188,50 @@ public class AnalyticsDataSource implements DataSource {
    * This Builder allows to customize the data source.
    */
   public static class Builder {
-
     private String hostname = CouchbaseDriver.DEFAULT_HOSTNAME;
     private String catalog = DEFAULT_CATALOG;
     private String schema = null;
     private Properties properties = new Properties();
 
+    /**
+     * Configures the hostname that should be used.
+     *
+     * @param hostname the hostname to use.
+     * @return this {@link Builder} for chaining purposes.
+     */
     public Builder hostname(final String hostname) {
       this.hostname = hostname == null || hostname.isEmpty() ? CouchbaseDriver.DEFAULT_HOSTNAME : hostname;
       return this;
     }
 
+    /**
+     * Configures the catalog name.
+     *
+     * @param catalog the catalog name to use.
+     * @return this {@link Builder} for chaining purposes.
+     */
     public Builder catalog(final String catalog) {
       this.catalog = catalog == null || catalog.isEmpty() ? DEFAULT_CATALOG : catalog;
       return this;
     }
 
+    /**
+     * Configures the schema to use.
+     *
+     * @param schema the schema to use.
+     * @return this {@link Builder} for chaining purposes.
+     */
     public Builder schema(final String schema) {
       this.schema = schema;
       return this;
     }
 
+    /**
+     * Sets custom properties that should be used.
+     *
+     * @param properties custom properties that should be used.
+     * @return this {@link Builder} for chaining purposes.
+     */
     public Builder properties(final Properties properties) {
       this.properties = properties == null ? new Properties() : properties;
       return this;

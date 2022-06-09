@@ -51,6 +51,11 @@ public class ConnectionHandle {
     this.coordinate = coordinate;
   }
 
+  /**
+   * Returns the internal core reference.
+   *
+   * @return the internal core reference to the cluster.
+   */
   public Core core() {
     return cluster.core();
   }
@@ -142,13 +147,28 @@ public class ConnectionHandle {
     }
   }
 
+  /**
+   * Closes this specific instance of the {@link ConnectionHandle}.
+   */
   public void close() {
     ConnectionManager.INSTANCE.maybeClose(coordinate);
   }
 
+  /**
+   * Defines the HTTP method that can be used for the request.
+   */
   public enum HttpMethod {
+    /**
+     * A HTTP GET request.
+     */
     GET,
+    /**
+     * A HTTP POST request.
+     */
     POST,
+    /**
+     * A HTTP DELETE request.
+     */
     DELETE
   }
 
