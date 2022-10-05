@@ -6,7 +6,7 @@
 
     <groupId>com.couchbase.client</groupId>
     <artifactId>couchbase-jdbc-driver</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3-SNAPSHOT</version>
 
     <name>Couchbase JDBC Driver</name>
     <description>Couchbase JDBC Driver for Couchbase Analytics</description>
@@ -15,7 +15,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
-        <couchbase-sdk.version>3.3.1</couchbase-sdk.version>
+        <couchbase-sdk.version>3.3.4</couchbase-sdk.version>
         <asterix-jdbc.version>0.9.8</asterix-jdbc.version>
     </properties>
 
@@ -36,7 +36,7 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.8.2</version>
+            <version>5.9.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -85,7 +85,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.3.2</version>
+                <version>3.4.1</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -128,7 +128,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.2</version>
+                <version>3.3.0</version>
                 <configuration>
                     <archive>
                         <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
@@ -158,7 +158,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
+                <version>3.4.0</version>
                 <configuration>
                     <relocations>
                         <relocation>

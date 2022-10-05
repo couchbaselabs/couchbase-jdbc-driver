@@ -10,6 +10,6 @@ This project contains the source code for the Couchbase JDBC Driver which suppor
 
 ## Usage: Analytics
 
- - **Current Version:** `1.0.1`
+ - **Current Version:** `1.0.2`
  - **JDBC URL Prefix:** `jdbc:couchbase:analytics` or `jdbc:cb:analytics` as a fallback.
  - **Minimum Couchbase Server Version:** 7.1.0
