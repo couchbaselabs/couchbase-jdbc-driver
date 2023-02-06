@@ -277,7 +277,8 @@ public final class CouchbaseDriver implements Driver {
   }
 
   private static Properties mergeUrlArgs(final String url, final Properties defaults) {
-    Properties urlProps = new Properties(defaults);
+    Properties urlProps = new Properties();
+    urlProps.putAll(defaults);
 
     String urlArgs = "";
 

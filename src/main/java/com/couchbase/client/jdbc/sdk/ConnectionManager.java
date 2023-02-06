@@ -65,8 +65,6 @@ public class ConnectionManager {
   private final Map<ConnectionCoordinate, Cluster> clusterCache = new ConcurrentHashMap<>();
   private final Map<ConnectionCoordinate, Long> openHandles = new ConcurrentHashMap<>();
 
-  private volatile ClusterEnvironment environment;
-
   private ConnectionManager() {
     try {
       Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
@@ -81,12 +79,13 @@ public class ConnectionManager {
   public synchronized void shutdown() {
     LOGGER.fine("Shutting down connected SDK resources.");
 
-    clusterCache.forEach((s, cluster) -> cluster.disconnect());
+    clusterCache.forEach((s, cluster) -> {
+      cluster.disconnect();
+      if (cluster.environment() != null) {
+        cluster.environment().shutdown();
+      }
+    });
     clusterCache.clear();
-    if (environment != null) {
-      environment.shutdown();
-      environment = null;
-    }
 
     LOGGER.finest("Completed shutting down connected SDK resources.");
   }
@@ -103,54 +102,12 @@ public class ConnectionManager {
 
   private Cluster clusterForCoordinate(final ConnectionCoordinate coordinate) {
     synchronized (this) {
-      if (environment == null) {
-        // This logger config makes sure the SDK also uses java.util.Logging.
-        LoggerConfig.Builder loggerConfig = LoggerConfig
-          .builder()
-          .disableSlf4J(true)
-          .fallbackToConsole(false);
 
-        SecurityConfig.Builder securityConfig = SecurityConfig
-          .builder();
-
-        if (Boolean.parseBoolean(CouchbaseDriverProperty.SSL.get(coordinate.properties()))) {
-          securityConfig = securityConfig.enableTls(true);
-
-          if ("no-verify".equals(CouchbaseDriverProperty.SSL_MODE.get(coordinate.properties()))) {
-            securityConfig = securityConfig.trustManagerFactory(InsecureTrustManagerFactory.INSTANCE);
-          } else {
-            if ("verify-ca".equals(CouchbaseDriverProperty.SSL_MODE.get(coordinate.properties()))) {
-              securityConfig = securityConfig.enableHostnameVerification(false);
-            }
-
-            String certPath = CouchbaseDriverProperty.SSL_CERT_PATH.get(coordinate.properties());
-            if (!isNullOrEmpty(certPath)) {
-              securityConfig.trustCertificate(Paths.get(certPath));
-            }
-
-            String keyStorePath = CouchbaseDriverProperty.SSL_KEYSTORE_PATH.get(coordinate.properties());
-            if (!isNullOrEmpty(keyStorePath)) {
-              String keyStorePassword = CouchbaseDriverProperty.SSL_KEYSTORE_PASSWORD.get(coordinate.properties());
-              if (isNull(keyStorePassword)) {
-                throw new IllegalArgumentException("If a keystore is provided, the password also needs to be provided");
-              }
-              securityConfig.trustStore(
-                Paths.get(keyStorePath),
-                keyStorePassword,
-                Optional.empty()
-              );
-            }
-          }
-        }
-
-        environment = ClusterEnvironment
-          .builder()
-          .load((PropertyLoader<CoreEnvironment.Builder>) builder ->
-            new SystemPropertyPropertyLoader(coordinate.properties()).load(builder))
-          .loggerConfig(loggerConfig)
-          .securityConfig(securityConfig)
-          .retryStrategy(new InterceptingRetryStrategy())
-          .build();
+      final ClusterEnvironment environment;
+      if (!clusterCache.containsKey(coordinate)) {
+        environment = generateEnvironment(coordinate);
+      } else {
+        environment = null;
       }
 
       long newHandleCount = openHandles.compute(coordinate, (k, v) -> {
@@ -177,6 +134,59 @@ public class ConnectionManager {
         }
       );
     }
+  }
+
+  private ClusterEnvironment generateEnvironment(final ConnectionCoordinate coordinate) {
+    // This logger config makes sure the SDK also uses java.util.Logging.
+    LoggerConfig.Builder loggerConfig = LoggerConfig
+            .builder()
+            .disableSlf4J(true)
+            .fallbackToConsole(false);
+
+    SecurityConfig.Builder securityConfig = SecurityConfig
+            .builder();
+
+    if (Boolean.parseBoolean(CouchbaseDriverProperty.SSL.get(coordinate.properties()))) {
+      securityConfig = securityConfig.enableTls(true);
+
+      if ("no-verify".equals(CouchbaseDriverProperty.SSL_MODE.get(coordinate.properties()))) {
+        securityConfig = securityConfig.trustManagerFactory(InsecureTrustManagerFactory.INSTANCE);
+      } else {
+        if ("verify-ca".equals(CouchbaseDriverProperty.SSL_MODE.get(coordinate.properties()))) {
+          securityConfig = securityConfig.enableHostnameVerification(false);
+        }
+
+        String certPath = CouchbaseDriverProperty.SSL_CERT_PATH.get(coordinate.properties());
+        if (!isNullOrEmpty(certPath)) {
+          securityConfig.trustCertificate(Paths.get(certPath));
+        }
+
+        String keyStorePath = CouchbaseDriverProperty.SSL_KEYSTORE_PATH.get(coordinate.properties());
+        if (!isNullOrEmpty(keyStorePath)) {
+          if (!isNullOrEmpty(certPath)) {
+            throw new IllegalArgumentException("Either trust certificates or a trust store can be provided, but not both");
+          }
+          String keyStorePassword = CouchbaseDriverProperty.SSL_KEYSTORE_PASSWORD.get(coordinate.properties());
+          if (isNull(keyStorePassword)) {
+            throw new IllegalArgumentException("If a keystore is provided, the password also needs to be provided");
+          }
+          securityConfig.trustStore(
+                  Paths.get(keyStorePath),
+                  keyStorePassword,
+                  Optional.empty()
+          );
+        }
+      }
+    }
+
+    return ClusterEnvironment
+            .builder()
+            .load((PropertyLoader<CoreEnvironment.Builder>) builder ->
+                    new SystemPropertyPropertyLoader(coordinate.properties()).load(builder))
+            .loggerConfig(loggerConfig)
+            .securityConfig(securityConfig)
+            .retryStrategy(new InterceptingRetryStrategy())
+            .build();
   }
 
   /**
@@ -211,10 +221,16 @@ public class ConnectionManager {
         DiagnosticsResult diagnostics = c.diagnostics();
         if (hasAuthFailure(diagnostics)) {
           c.disconnect();
+          if (c.environment() != null) {
+            c.environment().shutdown();
+          }
           decrementHandleCount(coordinate);
           throw new AuthenticationFailureException("Authentication/authorization error - please verify credentials.", null, x);
         } else if (totalDurationSpent.compareTo(connectTimeout) >= 0) {
           c.disconnect();
+          if (c.environment() != null) {
+            c.environment().shutdown();
+          }
           decrementHandleCount(coordinate);
           throw x;
         }

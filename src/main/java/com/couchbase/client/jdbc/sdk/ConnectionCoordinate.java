@@ -114,11 +114,11 @@ public class ConnectionCoordinate {
     if (o == null || getClass() != o.getClass()) return false;
     ConnectionCoordinate that = (ConnectionCoordinate) o;
     return Objects.equals(connectionString, that.connectionString) && Objects.equals(username, that.username)
-      && Objects.equals(password, that.password);
+      && Objects.equals(password, that.password) && Objects.equals(properties, that.properties);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(connectionString, username, password);
+    return Objects.hash(connectionString, username, password, properties);
   }
 }
