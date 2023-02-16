@@ -40,6 +40,7 @@ class AnalyticsDatabaseMetaDataIntegrationTest extends BaseAnalyticsIntegrationT
 
   @BeforeAll
   static void setup() throws Exception {
+    startContainer(AnalyticsDatabaseMetaDataIntegrationTest.class);
     connection = DriverManager.getConnection(url(), username(), password());
     metaData = connection.getMetaData();
   }
@@ -47,6 +48,7 @@ class AnalyticsDatabaseMetaDataIntegrationTest extends BaseAnalyticsIntegrationT
   @AfterAll
   static void teardown() throws Exception {
     connection.close();
+    stopContainer();
   }
 
   @Test

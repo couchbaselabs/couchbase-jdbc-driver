@@ -16,6 +16,8 @@
 
 package com.couchbase.client.jdbc.analytics;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
@@ -27,6 +29,16 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class AnalyticsConnectionIntegrationTest extends BaseAnalyticsIntegrationTest {
+
+  @BeforeAll
+  static void setup() throws Exception {
+    startContainer(AnalyticsConnectionIntegrationTest.class);
+  }
+
+  @AfterAll
+  static void teardown() throws Exception {
+    stopContainer();
+  }
 
   @Test
   void usesDefaultConnectionProperties() throws Exception {

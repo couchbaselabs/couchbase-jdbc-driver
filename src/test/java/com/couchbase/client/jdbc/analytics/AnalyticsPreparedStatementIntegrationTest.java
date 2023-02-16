@@ -36,12 +36,14 @@ public class AnalyticsPreparedStatementIntegrationTest extends BaseAnalyticsInte
 
   @BeforeAll
   static void setup() throws Exception {
+    startContainer(AnalyticsPreparedStatementIntegrationTest.class);
     connection = DriverManager.getConnection(url(), username(), password());
   }
 
   @AfterAll
   static void teardown() throws Exception {
     connection.close();
+    stopContainer();
   }
 
   @Test

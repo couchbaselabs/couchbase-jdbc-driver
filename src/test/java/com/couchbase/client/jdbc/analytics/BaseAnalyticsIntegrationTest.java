@@ -16,22 +16,34 @@
 
 package com.couchbase.client.jdbc.analytics;
 
-abstract class BaseAnalyticsIntegrationTest {
+import com.couchbase.client.core.util.ConnectionString;
+import com.couchbase.client.java.Cluster;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+
+import java.sql.DriverManager;
+
+abstract class BaseAnalyticsIntegrationTest extends DockerIntegrationTestBase {
 
   static String url() {
     return "jdbc:couchbase:analytics://" + hostname();
   }
 
   static String hostname() {
-    return "127.0.0.1";
+    return ConnectionString.create(container.getConnectionString())
+            .hosts().stream().findFirst()
+            .map(it -> it.hostname() + ":" + it.port())
+            .orElseThrow(() -> new IllegalArgumentException(
+                    "Connection string must have at least one host"
+            ));
   }
 
   static String username() {
-    return "Administrator";
+    return SERVER_USER;
   }
 
   static String password() {
-    return "password";
+    return SERVER_PASSWORD;
   }
 
 }

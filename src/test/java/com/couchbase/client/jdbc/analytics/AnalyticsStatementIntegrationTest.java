@@ -37,12 +37,14 @@ class AnalyticsStatementIntegrationTest extends BaseAnalyticsIntegrationTest {
 
   @BeforeAll
   static void setup() throws Exception {
+    startContainer(AnalyticsStatementIntegrationTest.class);
     connection = DriverManager.getConnection(url(), username(), password());
   }
 
   @AfterAll
   static void teardown() throws Exception {
     connection.close();
+    stopContainer();
   }
 
  @Test
