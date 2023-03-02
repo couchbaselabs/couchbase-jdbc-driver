@@ -104,7 +104,6 @@ public class ConnectionCoordinate {
     return "ConnectionCoordinate{" +
       "connectionString='" + connectionString + '\'' +
       ", authenticator=" + authenticator.getClass() +
-      ", properties=" + properties +
       '}';
   }
 
