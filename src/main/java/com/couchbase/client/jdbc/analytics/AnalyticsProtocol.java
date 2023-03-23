@@ -240,7 +240,7 @@ public class AnalyticsProtocol extends ADBProtocolBase {
     // By default, JDBC mandates an infinite timeout, but the SDK will set it to 75s.
     // So if 0 from the adb layer, set it to MAX_VALUE to effectively simulate the
     // same duration.
-    return options.timeoutSeconds > 0
+    return options.timeoutSeconds > 0 || options.compileOnly
       ? Duration.ofSeconds(options.timeoutSeconds)
       : Duration.ofNanos(Long.MAX_VALUE);
   }
