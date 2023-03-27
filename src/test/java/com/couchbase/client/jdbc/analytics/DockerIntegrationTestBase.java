@@ -40,7 +40,8 @@ public abstract class DockerIntegrationTestBase {
     private static final String COUCHBASE_SERVER_BUILD_DEFAULT = "3481";
     private static final String CBAS_QUOTA_PROPERTY = "cbas.quota";
     private static final int CBAS_QUOTA_DEFAULT = 1200; // MB
-    protected static final Duration WAIT_TIMEOUT = Duration.ofMinutes(2);
+    private static final Duration CLUSTER_STARTUP_WAIT_TIMEOUT = Duration.ofMinutes(2);
+    private static final int CONTAINER_STARTUP_ATTEMPTS = 5;
     private static final String COUCHBASE_LOGS_DIR = "/opt/couchbase/var/lib/couchbase/logs/";
     private static final String TARGET_DIR_PATH = "target";
     private static String testTargetDirPath;
@@ -64,11 +65,12 @@ public abstract class DockerIntegrationTestBase {
         container = new CouchbaseContainer(serverImageName)
                 .withEnabledServices(CouchbaseService.KV, CouchbaseService.ANALYTICS)
                 .withServiceQuota(CouchbaseService.ANALYTICS, cbasMemoryQuota)
-                .withCredentials(SERVER_USER, SERVER_PASSWORD);
+                .withCredentials(SERVER_USER, SERVER_PASSWORD)
+                .withStartupAttempts(CONTAINER_STARTUP_ATTEMPTS);
         container.start();
 
         Cluster cluster =  Cluster.connect(container.getConnectionString(), SERVER_USER, SERVER_PASSWORD);
-        cluster.waitUntilReady(WAIT_TIMEOUT);
+        cluster.waitUntilReady(CLUSTER_STARTUP_WAIT_TIMEOUT);
         cluster.analyticsQuery("Select 1");
         cluster.disconnect();
 

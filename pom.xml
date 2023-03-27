@@ -53,6 +53,7 @@
             <groupId>org.testcontainers</groupId>
             <artifactId>couchbase</artifactId>
             <version>${test-containers.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
