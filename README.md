@@ -2,11 +2,11 @@
 
 [![license](https://img.shields.io/github/license/couchbase/couchbase-jvm-clients?color=brightgreen)](https://opensource.org/licenses/Apache-2.0)
 
-This project contains the source code for the Couchbase JDBC Driver which supports the Analytics Service (not Query!). Its main purpose is to provide the low-level glue to facilitate integration with high level BI-Tools like Tableau.
+This project contains the source code for the Couchbase JDBC Driver which supports Capella Analytics and Enterprise Analytics. Its main purpose is to provide connectivity to any BI tool that supports a generic JDBC connection. Some examples of BI tools that support generic JDBC connectivity and should work include tools like: Qlik (Qlik Sense), SAP BusinessObjects, IBM Cognos, MicroStrategy, Looker, ThoughtSpot, DBeaver, and others.
 
 ## Prerequisites
 - Java environment JDK 8+.
-- The Couchbase JDBC Driver is compatible with Couchbase Enterprise Analytics and the Analytics Service (note: it does not support the Query Service). Its main purpose is to provide the low-level glue needed to facilitate integration with business intelligence (BI) tools.
+- The Couchbase JDBC Driver is compatible with both Capella Analytics and Enterprise Analytics (note: it does not support the Query Service).
 - **Analytics Tabular Views:** Pre-configured [tabular views](https://docs.couchbase.com/analytics/sqlpp/5a_views.html) for data access
 
 ## Setup/Installation
@@ -99,6 +99,5 @@ Property | Required | Default | Valid Values | Description
 
 ## Limitations
 - **Read-Only Operations:** Only SELECT queries are supported
-- **Analytics Service Only:** Query Service is not supported
 - **Tabular Views Required:** Data must be accessed through pre-configured tabular views
 - **No DML/DDL Operations:** INSERT, UPDATE, DELETE, and DDL statements are not supported
