@@ -159,6 +159,60 @@ public enum CouchbaseDriverProperty {
     "The password for the keystore."
   ),
   /**
+   * Enable client certificate authentication.
+   */
+  CLIENT_CERT_AUTH(
+    "clientCertAuth",
+    "false",
+    false,
+    "Set to true to enable client certificate authentication instead of username/password."
+  ),
+  /**
+   * Path to the client certificate file (PEM format).
+   */
+  CLIENT_CERT_PATH(
+    "clientCertPath",
+    null,
+    false,
+    "The absolute path to the client certificate file in PEM format."
+  ),
+  /**
+   * Path to the client private key file (PEM format, PKCS#8).
+   */
+  CLIENT_KEY_PATH(
+    "clientKeyPath",
+    null,
+    false,
+    "The absolute path to the client private key file in PEM format (PKCS#8)."
+  ),
+  /**
+   * Password/passphrase for encrypted client private key.
+   */
+  CLIENT_KEY_PASSWORD(
+    "clientKeyPassword",
+    null,
+    false,
+    "The password/passphrase to decrypt an encrypted private key file."
+  ),
+  /**
+   * Path to the client certificate keystore (PKCS12 or JKS format).
+   */
+  CLIENT_CERT_KEYSTORE_PATH(
+    "clientCertKeystorePath",
+    null,
+    false,
+    "The absolute path to the client certificate keystore (PKCS12 or JKS format)."
+  ),
+  /**
+   * Password for the client certificate keystore.
+   */
+  CLIENT_CERT_KEYSTORE_PASSWORD(
+    "clientCertKeystorePassword",
+    null,
+    false,
+    "The password for the client certificate keystore."
+  ),
+  /**
    * The scan consistency which should be used for queries.
    */
   SCAN_CONSISTENCY(

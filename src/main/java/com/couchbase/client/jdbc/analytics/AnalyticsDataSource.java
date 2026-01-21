@@ -74,11 +74,14 @@ public class AnalyticsDataSource implements DataSource {
 
   @Override
   public Connection getConnection(final String username, final String password) throws SQLException {
-    if (username == null || username.isEmpty()) {
-      throw new IllegalArgumentException("A username must be provided to connect");
-    }
-    if (password == null || password.isEmpty()) {
-      throw new IllegalArgumentException("A password must be provided to connect");
+    boolean clientCertAuth = Boolean.parseBoolean(CouchbaseDriverProperty.CLIENT_CERT_AUTH.get(properties));
+    if (!clientCertAuth) {
+      if (username == null || username.isEmpty()) {
+        throw new IllegalArgumentException("A username must be provided to connect");
+      }
+      if (password == null || password.isEmpty()) {
+        throw new IllegalArgumentException("A password must be provided to connect");
+      }
     }
 
     String url = "jdbc:asterixdb://"  + hostname + "/" + catalog;
@@ -87,9 +90,15 @@ public class AnalyticsDataSource implements DataSource {
     }
 
     Properties adbProperties = new Properties();
-    adbProperties.setProperty(ADBDriverProperty.Common.USER.getPropertyName(), username);
-    adbProperties.setProperty(ADBDriverProperty.Common.PASSWORD.getPropertyName(), password);
-
+    if (clientCertAuth) {
+      // For client certificate authentication, we use a placeholder for username/password
+      // since the actual authentication is done via certificates
+      adbProperties.setProperty(ADBDriverProperty.Common.USER.getPropertyName(), "certificate_auth");
+      adbProperties.setProperty(ADBDriverProperty.Common.PASSWORD.getPropertyName(), "certificate_auth");
+    } else {
+      adbProperties.setProperty(ADBDriverProperty.Common.USER.getPropertyName(), username);
+      adbProperties.setProperty(ADBDriverProperty.Common.PASSWORD.getPropertyName(), password);
+    }
 
     String dataverseMode = CouchbaseDriverProperty.CATALOG_DATAVERSE_MODE.get(properties);
     if ("catalogSchema".equals(dataverseMode)) {

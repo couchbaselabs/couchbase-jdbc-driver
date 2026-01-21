@@ -146,7 +146,15 @@ public class ConnectionManager {
     SecurityConfig.Builder securityConfig = SecurityConfig
             .builder();
 
-    if (Boolean.parseBoolean(CouchbaseDriverProperty.SSL.get(coordinate.properties()))) {
+    boolean sslEnabled = Boolean.parseBoolean(CouchbaseDriverProperty.SSL.get(coordinate.properties()));
+    boolean clientCertAuth = coordinate.isCertificateAuth();
+    // Client certificate authentication requires TLS to be enabled
+    if (clientCertAuth && !sslEnabled) {
+      LOGGER.fine("Client certificate authentication enabled, automatically enabling TLS");
+      sslEnabled = true;
+    }
+
+    if (sslEnabled) {
       securityConfig = securityConfig.enableTls(true);
 
       if ("no-verify".equals(CouchbaseDriverProperty.SSL_MODE.get(coordinate.properties()))) {

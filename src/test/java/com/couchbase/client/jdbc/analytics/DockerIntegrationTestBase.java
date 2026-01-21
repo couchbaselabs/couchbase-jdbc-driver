@@ -31,13 +31,13 @@ public abstract class DockerIntegrationTestBase {
     private static final Logger LOGGER = CouchbaseDriver.PARENT_LOGGER;
 
     private static final String SERVER_IMAGE_REPO = "build-docker.couchbase.com";
-    private static final String SERVER_IMAGE_PATH = "couchbase/server-internal";
+    private static final String SERVER_IMAGE_PATH = "cb-vanilla/server";
     protected static final String SERVER_USER = "couchbase";
     protected static final String SERVER_PASSWORD = "couchbase";
     private static final String COUCHBASE_SERVER_VERSION_PROPERTY = "server.version";
-    private static final String COUCHBASE_SERVER_VERSION_DEFAULT = "7.1.3";
+    private static final String COUCHBASE_SERVER_VERSION_DEFAULT = "7.6.9";
     private static final String COUCHBASE_SERVER_BUILD_PROPERTY = "server.build";
-    private static final String COUCHBASE_SERVER_BUILD_DEFAULT = "3481";
+    private static final String COUCHBASE_SERVER_BUILD_DEFAULT = "7600";
     private static final String CBAS_QUOTA_PROPERTY = "cbas.quota";
     private static final int CBAS_QUOTA_DEFAULT = 1200; // MB
     private static final Duration CLUSTER_STARTUP_WAIT_TIMEOUT = Duration.ofMinutes(2);
