@@ -71,6 +71,7 @@ public class ConnectionCoordinate {
   private final Properties properties;
   private final Duration connectTimeout;
   private final boolean certificateAuth;
+  private final boolean plainSaslAuth;
 
   /**
    * Creates a new Connection Coordinate. Automatically determines the authentication method
@@ -266,16 +267,24 @@ public class ConnectionCoordinate {
 
   /**
    * Creates a coordinate with password authentication.
+   * Uses PLAIN SASL authentication if enablePlainSaslAuth property is set to true.
    */
   private ConnectionCoordinate(String connectionString, String username, String password, Properties properties,
                                Duration connectTimeout) {
     this.connectionString = notNullOrEmpty(connectionString, "ConnectionString");
     this.username = username;
     this.password = password;
-    this.authenticator = notNull(PasswordAuthenticator.create(username, password), "Authenticator");
     this.properties = properties == null ? new Properties() : properties;
     this.connectTimeout = connectTimeout;
     this.certificateAuth = false;
+
+    // Use PLAIN SASL authenticator if enablePlainSaslAuth is enabled (for LDAP, PAM, etc.)
+    this.plainSaslAuth = Boolean.parseBoolean(CouchbaseDriverProperty.ENABLE_PLAIN_SASL_AUTH.get(this.properties));
+    if (this.plainSaslAuth) {
+      this.authenticator = notNull(PasswordAuthenticator.ldapCompatible(username, password), "Authenticator");
+    } else {
+      this.authenticator = notNull(PasswordAuthenticator.create(username, password), "Authenticator");
+    }
   }
 
   /**
@@ -290,6 +299,7 @@ public class ConnectionCoordinate {
     this.properties = properties == null ? new Properties() : properties;
     this.connectTimeout = connectTimeout;
     this.certificateAuth = true;
+    this.plainSaslAuth = false;
   }
 
   /**
@@ -299,6 +309,16 @@ public class ConnectionCoordinate {
    */
   public boolean isCertificateAuth() {
     return certificateAuth;
+  }
+
+  /**
+   * Returns whether this coordinate uses PLAIN SASL authentication.
+   * PLAIN SASL is required for LDAP, PAM, and other external authentication systems.
+   *
+   * @return true if PLAIN SASL authentication is used.
+   */
+  public boolean isPlainSaslAuth() {
+    return plainSaslAuth;
   }
 
   /**
@@ -342,6 +362,7 @@ public class ConnectionCoordinate {
     return "ConnectionCoordinate{" +
       "connectionString='" + connectionString + '\'' +
       ", authenticator=" + authenticator.getClass() +
+      ", plainSaslAuth=" + plainSaslAuth +
       '}';
   }
 
@@ -351,6 +372,7 @@ public class ConnectionCoordinate {
     if (o == null || getClass() != o.getClass()) return false;
     ConnectionCoordinate that = (ConnectionCoordinate) o;
     return certificateAuth == that.certificateAuth
+      && plainSaslAuth == that.plainSaslAuth
       && Objects.equals(connectionString, that.connectionString)
       && Objects.equals(username, that.username)
       && Objects.equals(password, that.password)
@@ -359,6 +381,6 @@ public class ConnectionCoordinate {
 
   @Override
   public int hashCode() {
-    return Objects.hash(connectionString, username, password, properties, certificateAuth);
+    return Objects.hash(connectionString, username, password, properties, certificateAuth, plainSaslAuth);
   }
 }

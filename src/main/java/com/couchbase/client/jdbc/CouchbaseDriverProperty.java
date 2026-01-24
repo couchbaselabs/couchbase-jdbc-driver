@@ -195,6 +195,17 @@ public enum CouchbaseDriverProperty {
     "The password/passphrase to decrypt an encrypted private key file."
   ),
   /**
+   * Enable PLAIN SASL authentication mechanism.
+   */
+  ENABLE_PLAIN_SASL_AUTH(
+    "enablePlainSaslAuth",
+    "false",
+    false,
+    "Set to true to enable PLAIN SASL authentication mechanism. This is required for LDAP, " +
+      "PAM, and other external authentication systems. WARNING: This sends credentials in " +
+      "cleartext over non-TLS connections. TLS is strongly recommended."
+  ),
+  /**
    * Path to the client certificate keystore (PKCS12 or JKS format).
    */
   CLIENT_CERT_KEYSTORE_PATH(

@@ -45,8 +45,50 @@ class ConnectionCoordinateTest {
     );
 
     assertFalse(coord.isCertificateAuth());
+    assertFalse(coord.isPlainSaslAuth());
     assertInstanceOf(PasswordAuthenticator.class, coord.authenticator());
     assertEquals("localhost", coord.connectionString());
+  }
+
+  @Test
+  void testPlainSaslAuthentication() {
+    Properties props = new Properties();
+    props.setProperty(CouchbaseDriverProperty.ENABLE_PLAIN_SASL_AUTH.getName(), "true");
+
+    ConnectionCoordinate coord = ConnectionCoordinate.create(
+      "localhost", "user", "password", props, Duration.ZERO
+    );
+
+    assertFalse(coord.isCertificateAuth());
+    assertTrue(coord.isPlainSaslAuth());
+    assertInstanceOf(PasswordAuthenticator.class, coord.authenticator());
+    assertEquals("localhost", coord.connectionString());
+  }
+
+  @Test
+  void testPlainSaslAuthDefaultsToFalse() {
+    Properties props = new Properties();
+    // Don't set enablePlainSaslAuth property
+
+    ConnectionCoordinate coord = ConnectionCoordinate.create(
+      "localhost", "user", "password", props, Duration.ZERO
+    );
+
+    assertFalse(coord.isPlainSaslAuth());
+    assertInstanceOf(PasswordAuthenticator.class, coord.authenticator());
+  }
+
+  @Test
+  void testPlainSaslAuthExplicitlyDisabled() {
+    Properties props = new Properties();
+    props.setProperty(CouchbaseDriverProperty.ENABLE_PLAIN_SASL_AUTH.getName(), "false");
+
+    ConnectionCoordinate coord = ConnectionCoordinate.create(
+      "localhost", "user", "password", props, Duration.ZERO
+    );
+
+    assertFalse(coord.isPlainSaslAuth());
+    assertInstanceOf(PasswordAuthenticator.class, coord.authenticator());
   }
 
   @Test
