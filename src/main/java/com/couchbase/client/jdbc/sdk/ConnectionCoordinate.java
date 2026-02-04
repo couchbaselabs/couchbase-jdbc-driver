@@ -57,12 +57,7 @@ import static com.couchbase.client.core.util.Validators.notNullOrEmpty;
  */
 public class ConnectionCoordinate {
 
-  // Register Bouncy Castle provider for cryptographic operations
-  static {
-    if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-      Security.addProvider(new BouncyCastleProvider());
-    }
-  }
+  private static final BouncyCastleProvider BOUNCY_CASTLE_PROVIDER = new BouncyCastleProvider();
 
   private final String connectionString;
   private final String username;
@@ -199,7 +194,7 @@ public class ConnectionCoordinate {
         }
         PKCS8EncryptedPrivateKeyInfo encryptedInfo = (PKCS8EncryptedPrivateKeyInfo) pemObject;
         InputDecryptorProvider decryptorProvider = new JceOpenSSLPKCS8DecryptorProviderBuilder()
-          .setProvider(BouncyCastleProvider.PROVIDER_NAME)
+          .setProvider(BOUNCY_CASTLE_PROVIDER)
           .build(password.toCharArray());
         PrivateKeyInfo keyInfo = encryptedInfo.decryptPrivateKeyInfo(decryptorProvider);
         return converter.getPrivateKey(keyInfo);
@@ -214,7 +209,7 @@ public class ConnectionCoordinate {
         }
         PEMEncryptedKeyPair encryptedKeyPair = (PEMEncryptedKeyPair) pemObject;
         PEMDecryptorProvider decryptorProvider = new JcePEMDecryptorProviderBuilder()
-          .setProvider(BouncyCastleProvider.PROVIDER_NAME)
+          .setProvider(BOUNCY_CASTLE_PROVIDER)
           .build(password.toCharArray());
         PEMKeyPair keyPair = encryptedKeyPair.decryptKeyPair(decryptorProvider);
         return converter.getPrivateKey(keyPair.getPrivateKeyInfo());
