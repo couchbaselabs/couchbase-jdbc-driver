@@ -17,7 +17,7 @@ You will need:
 * A Sonatype account authorized to publish to the `com.couchbase` namespace.
 * A `~/.m2/settings.xml` file with a
   [User Token](https://blog.sonatype.com/2012/08/securing-repository-credentials-with-nexus-pro-user-tokens/).
-  To generate a token, go to https://oss.sonatype.org and log in with your Sonatype account.
+  To generate a token, go to https://central.sonatype.com and log in with your Sonatype account.
   Click on your username (upper right) and select "Profile". From the drop-down menu,
   select "User Token". Press "Access User Token" to see a snippet of XML with server credentials.
   Copy and paste this XML into the `servers` section of your Maven settings,
@@ -29,7 +29,7 @@ At a minimum, your `~/.m2/settings.xml` should look something like:
     <settings>
       <servers>
         <server>
-          <id>ossrh</id>
+          <id>central</id>
           <username>xxxxxxxx</username>
           <password>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</password>
         </server>
@@ -84,7 +84,7 @@ case you might want to check out the Troubleshooting section below.
 
 If the release succeeded, now's the time to publish the tag:
 
-    git push origin x.y.z
+    git push gerrit x.y.z
 
 ## Prepare for next dev cycle
 
