@@ -6,15 +6,15 @@
 
     <groupId>com.couchbase.client</groupId>
     <artifactId>couchbase-jdbc-driver</artifactId>
-    <version>1.0.5</version>
+    <version>1.1.0</version>
 
     <name>Couchbase JDBC Driver</name>
     <description>Couchbase JDBC Driver for Couchbase Analytics</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <couchbase-sdk.version>3.5.3</couchbase-sdk.version>
-        <asterix-jdbc.version>0.9.8.2</asterix-jdbc.version>
+        <couchbase-sdk.version>3.11.1</couchbase-sdk.version>
+        <asterix-jdbc.version>0.9.8.5</asterix-jdbc.version>
         <test-containers.version>1.16.3</test-containers.version>
         <server.version>7.6.9</server.version>
         <server.build>7600</server.build>
