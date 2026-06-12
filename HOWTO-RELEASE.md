@@ -40,17 +40,22 @@ All set? In that case...
 
 ## Let's do this!
 
-Start by running `mvn clean verify -Prelease` to make sure the project builds successfully,
+Start by running `mvn clean verify -Prelease` to make sure both modules build successfully,
 artifact signing works, and the unit tests pass.
 
 When you're satisfied with the test results, it's time to...
 
-## Bump the project version number
+## Bump the project version numbers
 
-1. Edit `pom.xml` and remove the `-SNAPSHOT` suffix from the version string.
-2. Commit these changes, with message "Prepare x.y.z release"
-   (where x.y.z is the version you're releasing).
-3. Review the changes in Gerrit, and submit them.
+Each flavor has its own version. Edit the version in the relevant child POM and remove the `-SNAPSHOT` suffix:
+
+- `enterprise-analytics-jdbc-driver/pom.xml` — Enterprise Analytics flavor (e.g. `2.0.0`)
+- `couchbase-analytics-jdbc-driver/pom.xml` — Couchbase Server Analytics flavor (e.g. `1.2.0`)
+
+The root `pom.xml` version (`1.0.0-SNAPSHOT`) is the aggregator POM and is not published; leave it unchanged.
+
+Commit with message "Prepare x.y.z release" (where x.y.z is the version you're releasing).
+Review the changes in Gerrit, and submit them.
 
 ## Tag the release
 
@@ -67,9 +72,16 @@ there will be no more changes. Otherwise, it can be a pain to remove an unwanted
 
 ## Go! Go! Go!
 
-Here it is, the moment of truth. When you're ready to deploy to the Maven Central Repository:
+Here it is, the moment of truth. When you're ready to deploy both flavors to the Maven Central Repository:
 
     mvn clean deploy -Prelease
+
+This deploys both `enterprise-analytics-jdbc-driver` and `couchbase-analytics-jdbc-driver` in a single reactor run.
+
+To deploy only one flavor:
+
+    mvn clean deploy -Prelease -pl enterprise-analytics-jdbc-driver
+    mvn clean deploy -Prelease -pl couchbase-analytics-jdbc-driver
 
 Alternatively, if you prefer to inspect the staging repository and
 [complete the release manually](https://central.sonatype.org/pages/releasing-the-deployment.html),
@@ -77,7 +89,7 @@ set this additional property:
 
     mvn clean deploy -Prelease -DautoReleaseAfterClose=false
 
-Remember, you can add `-DskipITs` to either command to skip integration tests if appropriate.
+Remember, you can add `-DskipITs` to skip integration tests if appropriate.
 
 Whew, you did it! Or the build failed, and you're looking at a cryptic error message, in which
 case you might want to check out the Troubleshooting section below.
@@ -88,12 +100,12 @@ If the release succeeded, now's the time to publish the tag:
 
 ## Prepare for next dev cycle
 
-Increment the version number in `pom.xml` and restore the `-SNAPSHOT` suffix.
+Increment the version in `enterprise-analytics-jdbc-driver/pom.xml` and/or `couchbase-analytics-jdbc-driver/pom.xml` and restore the `-SNAPSHOT` suffix.
 Commit and push to Gerrit. Breathe in. Breathe out.
 
 ## Publishing a snapshot
 
-After every passing nightly build, a snapshot should be published to the Sonatype OSS snapshot repository by running this command:
+After every passing nightly build, a snapshot should be published to the Sonatype OSS snapshot repository by running this command (publishes both flavors):
 
     mvn clean deploy -Psnapshot
 

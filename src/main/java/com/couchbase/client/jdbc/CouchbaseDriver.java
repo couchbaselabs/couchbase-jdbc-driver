@@ -17,7 +17,8 @@
 package com.couchbase.client.jdbc;
 
 import com.couchbase.client.jdbc.analytics.AnalyticsDataSource;
-import com.couchbase.client.jdbc.sdk.ConnectionManager;
+import com.couchbase.client.jdbc.analytics.AnalyticsDriver;
+
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
@@ -150,7 +151,7 @@ public final class CouchbaseDriver implements Driver {
   private static void register() throws SQLException {
     DriverManager.registerDriver(
       new CouchbaseDriver(),
-      () -> ConnectionManager.INSTANCE.shutdown()
+      () -> AnalyticsDriver.shutdown()
     );
   }
 

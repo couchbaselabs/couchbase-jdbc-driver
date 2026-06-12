@@ -16,8 +16,6 @@
 
 package com.couchbase.client.jdbc.analytics;
 
-import com.couchbase.client.core.error.AuthenticationFailureException;
-import com.couchbase.client.core.error.TimeoutException;
 import com.couchbase.client.jdbc.CouchbaseDriver;
 import org.apache.asterix.jdbc.core.ADBDriverBase;
 import org.apache.asterix.jdbc.core.ADBDriverContext;
@@ -27,16 +25,15 @@ import org.apache.asterix.jdbc.core.ADBProtocolBase;
 
 import java.net.URI;
 import java.sql.SQLException;
-import java.sql.SQLTimeoutException;
 import java.util.Map;
 import java.util.Properties;
-
-import static com.couchbase.client.jdbc.ErrorUtils.authError;
 
 /**
  * The {@link AnalyticsDriver} provides the main entry point into the Analytics through the {@link ADBDriverBase}.
  * <p>
- * For the I/O components, see the {@link AnalyticsProtocol}.
+ * The concrete protocol implementation is selected at build time: the "sdk" and "capella-analytics"
+ * build flavors each supply their own {@code AnalyticsProtocolFactory}, so this class never
+ * references a specific protocol or its dependencies directly.
  */
 public class AnalyticsDriver extends ADBDriverBase {
 
@@ -57,18 +54,15 @@ public class AnalyticsDriver extends ADBDriverBase {
   @Override
   protected ADBProtocolBase createProtocol(final String hostname, final int port,
                                            final Map<ADBDriverProperty, Object> map, final ADBDriverContext ctx) throws SQLException {
-    try {
-      return new AnalyticsProtocol(properties, hostname, port, ctx, map);
-    } catch (TimeoutException ex) {
-      throw new SQLTimeoutException("Could not connect to the Cluster in the given connectTimeout interval.", ex);
-    } catch (AuthenticationFailureException ex) {
-      throw authError(ex);
-    }
+    // The protocol implementation is chosen at build time. Each build flavor supplies its own
+    // AnalyticsProtocolFactory (same FQN), which instantiates its protocol and maps any
+    // flavor-specific connection exceptions to SQLException.
+    return AnalyticsProtocolFactory.create(properties, hostname, port, map, ctx);
   }
 
   @Override
   protected Properties getURIParameters(final URI uri) {
-    return new Properties(); // The actual properties are passed through the AnalyticsProtocol.
+    return new Properties(); // The actual properties are passed through the AnalyticsProtocolFactory.
   }
 
   @Override
@@ -84,6 +78,10 @@ public class AnalyticsDriver extends ADBDriverBase {
   @Override
   public ADBDriverContext getOrCreateDriverContext() {
     return super.getOrCreateDriverContext();
+  }
+
+  public static void shutdown() {
+    AnalyticsProtocolFactory.shutdown();
   }
 
 }

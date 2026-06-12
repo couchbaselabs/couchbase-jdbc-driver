@@ -41,9 +41,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * This test class configures the Couchbase server for client certificate
  * authentication and tests end-to-end certificate-based connections.
  */
-class ClientCertAuthIntegrationTest extends BaseAnalyticsIntegrationTest {
+class ClientCertAuthIT extends BaseAnalyticsIntegrationTest {
 
-  private static final Logger LOGGER = Logger.getLogger(ClientCertAuthIntegrationTest.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(ClientCertAuthIT.class.getName());
 
   private static Path tempDir;
   private static Path caCertPath;
@@ -60,7 +60,7 @@ class ClientCertAuthIntegrationTest extends BaseAnalyticsIntegrationTest {
 
   @BeforeAll
   static void setup() throws Exception {
-    startContainer(ClientCertAuthIntegrationTest.class);
+    startContainer(ClientCertAuthIT.class);
 
     // Create temp directory for certificates
     tempDir = Files.createTempDirectory("cert-auth-test");

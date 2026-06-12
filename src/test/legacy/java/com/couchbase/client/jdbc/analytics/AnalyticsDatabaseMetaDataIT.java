@@ -33,14 +33,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class AnalyticsDatabaseMetaDataIntegrationTest extends BaseAnalyticsIntegrationTest {
+class AnalyticsDatabaseMetaDataIT extends BaseAnalyticsIntegrationTest {
 
   private static Connection connection;
   private static DatabaseMetaData metaData;
 
   @BeforeAll
   static void setup() throws Exception {
-    startContainer(AnalyticsDatabaseMetaDataIntegrationTest.class);
+    startContainer(AnalyticsDatabaseMetaDataIT.class);
     connection = DriverManager.getConnection(url(), username(), password());
     metaData = connection.getMetaData();
   }

@@ -22,21 +22,22 @@ import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class AnalyticsPreparedStatementIntegrationTest extends BaseAnalyticsIntegrationTest {
+class AnalyticsStatementIT extends BaseAnalyticsIntegrationTest {
 
   private static Connection connection;
 
   @BeforeAll
   static void setup() throws Exception {
-    startContainer(AnalyticsPreparedStatementIntegrationTest.class);
+    startContainer(AnalyticsStatementIT.class);
     connection = DriverManager.getConnection(url(), username(), password());
   }
 
@@ -46,23 +47,35 @@ public class AnalyticsPreparedStatementIntegrationTest extends BaseAnalyticsInte
     stopContainer();
   }
 
+ @Test
+  void performsSimpleExecuteQuery() throws Exception {
+   ResultSet resultSet = connection.createStatement().executeQuery("select \"Michael\" as firstname");
+   resultSet.next();
+   assertEquals("Michael", resultSet.getString("firstname"));
+   assertEquals("Michael", resultSet.getString(1));
+ }
+
   @Test
-  void executeQuery() throws Exception {
-    String statement = "select `Dataverse`.* from Metadata.`Dataverse` where DataverseName = ?";
-    PreparedStatement preparedStatement = connection.prepareStatement(statement);
+  void performsSimpleExecute() throws Exception {
+    Statement statement = connection.createStatement();
+    assertNotNull(statement);
 
-    assertEquals(1, preparedStatement.getParameterMetaData().getParameterCount());
-    assertTrue(preparedStatement.getMetaData().getColumnCount() > 0);
+    boolean result = statement.execute("select \"Michael\" as firstname");
+    assertTrue(result);
 
-    preparedStatement.setString(1, "Default");
-    ResultSet resultSet = preparedStatement.executeQuery();
+    ResultSet resultSet = statement.getResultSet();
+    resultSet.next();
+    assertEquals("Michael", resultSet.getString("firstname"));
+    assertEquals("Michael", resultSet.getString(1));
+  }
 
-    assertTrue(resultSet.next());
-    assertEquals("Default", resultSet.getString("DataverseName"));
-    assertNotNull(resultSet.getString("Timestamp"));
-    assertTrue(resultSet.getMetaData().getColumnCount() > 0);
+  @Test
+  void returnsNestedErrorContext() throws Exception {
+    Statement statement = connection.createStatement();
+    assertNotNull(statement);
 
-    assertFalse(resultSet.next());
+    SQLException ex = assertThrows(SQLException.class, () -> statement.execute("select 1="));
+    assertTrue(ex.getMessage().contains("Syntax error"));
   }
 
 }

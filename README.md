@@ -2,33 +2,58 @@
 
 [![license](https://img.shields.io/github/license/couchbase/couchbase-jvm-clients?color=brightgreen)](https://opensource.org/licenses/Apache-2.0)
 
-This project contains the source code for the Couchbase JDBC Driver which supports Capella Analytics and Enterprise Analytics. Its main purpose is to provide connectivity to any BI tool that supports a generic JDBC connection. Some examples of BI tools that support generic JDBC connectivity and should work include tools like: Qlik (Qlik Sense), SAP BusinessObjects, IBM Cognos, MicroStrategy, Looker, ThoughtSpot, DBeaver, and others.
+This project contains the source code for the Couchbase JDBC Driver which supports Enterprise Analytics and Couchbase Server Analytics. Its main purpose is to provide connectivity to any BI tool that supports a generic JDBC connection. Some examples of BI tools that support generic JDBC connectivity and should work include tools like: Qlik (Qlik Sense), SAP BusinessObjects, IBM Cognos, MicroStrategy, Looker, ThoughtSpot, DBeaver, and others.
 
 ## Prerequisites
 - Java environment JDK 8+.
-- The Couchbase JDBC Driver is compatible with both Capella Analytics and Enterprise Analytics (note: it does not support the Query Service).
+- The Couchbase JDBC Driver is compatible with both Enterprise Analytics and Couchbase Server Analytics (note: it does not support the Query Service).
 - **Analytics Tabular Views:** Pre-configured [tabular views](https://docs.couchbase.com/analytics/sqlpp/5a_views.html) for data access
+
+## Build Flavors
+
+Two driver flavors are published, each targeting a different Couchbase deployment:
+
+| Artifact | Target | Protocol |
+|---|---|---|
+| `enterprise-analytics-jdbc-driver` | Enterprise Analytics | Analytics Java SDK |
+| `couchbase-analytics-jdbc-driver` | Couchbase Server Analytics | Java SDK (core) |
 
 ## Setup/Installation
 
-### Maven
-Add the following dependency to your `pom.xml`
+### Enterprise Analytics — `enterprise-analytics-jdbc-driver`
+
+#### Maven
 ```xml
 <dependency>
     <groupId>com.couchbase.client</groupId>
-    <artifactId>couchbase-jdbc-driver</artifactId>
-    <version>1.0.5</version>
+    <artifactId>enterprise-analytics-jdbc-driver</artifactId>
+    <version>2.0.0</version>
 </dependency>
 ```
 
-### Gradle
-Add the following dependency to your `build.gradle`
+#### Gradle
 ```groovy
-implementation 'com.couchbase.client:couchbase-jdbc-driver:1.0.5'
+implementation 'com.couchbase.client:enterprise-analytics-jdbc-driver:2.0.0'
+```
+
+### Couchbase Server Analytics — `couchbase-analytics-jdbc-driver`
+
+#### Maven
+```xml
+<dependency>
+    <groupId>com.couchbase.client</groupId>
+    <artifactId>couchbase-analytics-jdbc-driver</artifactId>
+    <version>1.2.0</version>
+</dependency>
+```
+
+#### Gradle
+```groovy
+implementation 'com.couchbase.client:couchbase-analytics-jdbc-driver:1.2.0'
 ```
 
 ### Jar File
-Download the latest version of the JDBC driver from [Maven Central](https://repo1.maven.org/maven2/com/couchbase/client/couchbase-jdbc-driver/) and add it to your classpath.
+Download the latest version from Maven Central and add it to your classpath.
 
 ## Configuration
 

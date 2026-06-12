@@ -28,11 +28,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class AnalyticsConnectionIntegrationTest extends BaseAnalyticsIntegrationTest {
+class AnalyticsConnectionIT extends BaseAnalyticsIntegrationTest {
 
   @BeforeAll
   static void setup() throws Exception {
-    startContainer(AnalyticsConnectionIntegrationTest.class);
+    startContainer(AnalyticsConnectionIT.class);
   }
 
   @AfterAll

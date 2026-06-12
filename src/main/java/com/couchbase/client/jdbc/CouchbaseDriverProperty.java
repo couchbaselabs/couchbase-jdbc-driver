@@ -244,6 +244,47 @@ public enum CouchbaseDriverProperty {
     null,
     false,
     "The scanWait value to use for a query."
+  ),
+  /**
+   * OIDC issuer URL for the client credentials grant (e.g. https://idp.example.com/realms/myrealm).
+   */
+  IDP_URL(
+    "idpUrl",
+    null,
+    false,
+    "OIDC issuer URL. When set together with clientId and clientSecret, the driver resolves the " +
+      "token endpoint via OIDC discovery (<issuer>/.well-known/openid-configuration), performs a " +
+      "client credentials grant, and uses the resulting JWT for authentication. If no discovery " +
+      "document is available, the value is used directly as the token endpoint."
+  ),
+  /**
+   * OAuth2 client ID for client credentials grant.
+   */
+  CLIENT_ID(
+    "clientId",
+    null,
+    false,
+    "OAuth2 client ID used for the client credentials grant."
+  ),
+  /**
+   * OAuth2 client secret for client credentials grant.
+   */
+  CLIENT_SECRET(
+    "clientSecret",
+    null,
+    false,
+    "OAuth2 client secret used for the client credentials grant."
+  ),
+  /**
+   * Pre-issued OAuth2/OIDC access token (JWT) for the interactive Authorization Code flow.
+   */
+  ACCESS_TOKEN(
+    "accessToken",
+    null,
+    false,
+    "A pre-issued OAuth2/OIDC access token (JWT). When set, the driver authenticates with this " +
+      "bearer token directly; token acquisition and refresh are handled by the host (e.g. Tableau's " +
+      "OAuth integration). Takes precedence over idpUrl/clientId."
   );
 
   private final String name;

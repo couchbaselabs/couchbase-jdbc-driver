@@ -16,7 +16,7 @@
 
 package com.couchbase.client.jdbc.analytics;
 
-import com.couchbase.client.core.util.Golang;
+import com.couchbase.client.jdbc.util.Golang;
 import com.couchbase.client.jdbc.CouchbaseDriver;
 import com.couchbase.client.jdbc.CouchbaseDriverProperty;
 import org.apache.asterix.jdbc.core.ADBDriverProperty;
@@ -75,7 +75,18 @@ public class AnalyticsDataSource implements DataSource {
   @Override
   public Connection getConnection(final String username, final String password) throws SQLException {
     boolean clientCertAuth = Boolean.parseBoolean(CouchbaseDriverProperty.CLIENT_CERT_AUTH.get(properties));
-    if (!clientCertAuth) {
+    // OAuth/OIDC authentication carries no username/password: either a pre-issued access token
+    // (interactive Authorization Code flow) or an idpUrl+clientId (client-credentials flow).
+    String accessToken = CouchbaseDriverProperty.ACCESS_TOKEN.get(properties);
+    String idpUrl = CouchbaseDriverProperty.IDP_URL.get(properties);
+    String clientId = CouchbaseDriverProperty.CLIENT_ID.get(properties);
+    // tokenAuth is true only when the driver can authenticate without a password:
+    // - pre-issued access token (host-managed OAuth), OR
+    // - idpUrl + clientId both set (client-credentials flow; mirrors AnalyticsSdkProtocol logic).
+    // Setting only idpUrl without clientId would fall back to user/password in the protocol layer.
+    boolean tokenAuth = (accessToken != null && !accessToken.isEmpty())
+        || (idpUrl != null && !idpUrl.isEmpty() && clientId != null && !clientId.isEmpty());
+    if (!clientCertAuth && !tokenAuth) {
       if (username == null || username.isEmpty()) {
         throw new IllegalArgumentException("A username must be provided to connect");
       }
@@ -90,11 +101,12 @@ public class AnalyticsDataSource implements DataSource {
     }
 
     Properties adbProperties = new Properties();
-    if (clientCertAuth) {
-      // For client certificate authentication, we use a placeholder for username/password
-      // since the actual authentication is done via certificates
-      adbProperties.setProperty(ADBDriverProperty.Common.USER.getPropertyName(), "certificate_auth");
-      adbProperties.setProperty(ADBDriverProperty.Common.PASSWORD.getPropertyName(), "certificate_auth");
+    if (clientCertAuth || tokenAuth) {
+      // For certificate and OAuth/OIDC auth the real credential is supplied elsewhere (client cert,
+      // or a bearer JWT via the Analytics SDK), so use placeholders to satisfy the asterix layer.
+      adbProperties.setProperty(ADBDriverProperty.Common.USER.getPropertyName(),
+          username != null && !username.isEmpty() ? username : "");
+      adbProperties.setProperty(ADBDriverProperty.Common.PASSWORD.getPropertyName(), "");
     } else {
       adbProperties.setProperty(ADBDriverProperty.Common.USER.getPropertyName(), username);
       adbProperties.setProperty(ADBDriverProperty.Common.PASSWORD.getPropertyName(), password);
