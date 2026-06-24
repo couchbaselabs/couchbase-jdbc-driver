@@ -16,6 +16,7 @@
 
 package com.couchbase.client.jdbc.sdk;
 
+import com.couchbase.client.core.classic.analytics.AnalyticsHelper;
 import com.couchbase.client.core.deps.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import com.couchbase.client.core.diagnostics.DiagnosticsResult;
 import com.couchbase.client.core.diagnostics.EndpointDiagnostics;
@@ -56,6 +57,10 @@ import static java.util.Objects.isNull;
 public class ConnectionManager {
 
   private static final Logger LOGGER = Logger.getLogger("ConnectionManager");
+
+  static {
+    AnalyticsHelper.skipClusterTypeCheck();
+  }
 
   /**
    * The singleton instance that should be used for the manager.
