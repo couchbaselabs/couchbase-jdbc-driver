@@ -30,6 +30,7 @@ import org.apache.asterix.jdbc.core.ADBProtocolBase;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Collections;
@@ -144,6 +145,12 @@ public class AnalyticsSdkProtocol extends ADBProtocolBase {
           // If SSL is enabled but no-verify mode, disable certificate verification
           if (ssl && noVerify) {
             opts.security(sec -> sec.disableServerCertificateVerification(true));
+          } else if (ssl) {
+            // Trust a custom CA when one is supplied (matches legacy sslCertPath handling).
+            String sslCertPath = CouchbaseDriverProperty.SSL_CERT_PATH.get(properties);
+            if (sslCertPath != null && !sslCertPath.isEmpty()) {
+              opts.security(sec -> sec.trustOnlyPemFile(Paths.get(sslCertPath)));
+            }
           }
         }
     );
