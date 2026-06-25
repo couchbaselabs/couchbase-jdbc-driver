@@ -31,6 +31,7 @@ import org.apache.asterix.jdbc.core.ADBProtocolBase;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.security.KeyStore;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Collections;
@@ -116,8 +117,13 @@ public class AnalyticsSdkProtocol extends ADBProtocolBase {
     Integer connectTimeout = (Integer) ADBDriverProperty.Common.CONNECT_TIMEOUT.fetchPropertyValue(params);
     Duration timeout = connectTimeout != null ? Duration.ofSeconds(connectTimeout) : Duration.ofSeconds(30);
 
+    boolean clientCertAuth = Boolean.parseBoolean(CouchbaseDriverProperty.CLIENT_CERT_AUTH.get(properties));
+
     Credential credential;
-    if (accessToken != null && !accessToken.isEmpty()) {
+    if (clientCertAuth) {
+      // Mutual TLS: authenticate with a client certificate instead of a password/token.
+      credential = certificateCredential(properties);
+    } else if (accessToken != null && !accessToken.isEmpty()) {
       // Interactive OAuth (Authorization Code flow): the host (e.g. Tableau) performs the browser
       // login and token refresh, and supplies the current access token per connection. We present
       // it directly as a bearer JWT.
@@ -157,6 +163,36 @@ public class AnalyticsSdkProtocol extends ADBProtocolBase {
 
     // Create HTTP client for direct API calls (cancel operations, streaming queries)
     this.httpClient = InternalUnsupportedHttpClient.from(cluster);
+  }
+
+  /**
+   * Builds a client-certificate (mTLS) credential. Supports a PKCS12/JKS keystore file
+   * ({@code clientCertKeystorePath}) or PEM cert+key files ({@code clientCertPath} +
+   * {@code clientKeyPath}), matching the legacy java-client protocol.
+   */
+  private static Credential certificateCredential(final Properties properties) {
+    String keystorePath = CouchbaseDriverProperty.CLIENT_CERT_KEYSTORE_PATH.get(properties);
+    if (keystorePath != null && !keystorePath.isEmpty()) {
+      String keystorePassword = CouchbaseDriverProperty.CLIENT_CERT_KEYSTORE_PASSWORD.get(properties);
+      return Credential.fromKeyStore(Paths.get(keystorePath), keystorePassword == null ? "" : keystorePassword);
+    }
+
+    String certPath = CouchbaseDriverProperty.CLIENT_CERT_PATH.get(properties);
+    String keyPath = CouchbaseDriverProperty.CLIENT_KEY_PATH.get(properties);
+    if (certPath != null && !certPath.isEmpty() && keyPath != null && !keyPath.isEmpty()) {
+      String keyPassword = CouchbaseDriverProperty.CLIENT_KEY_PASSWORD.get(properties);
+      try {
+        KeyStore keyStore = ClientCertificates.keyStoreFromPem(Paths.get(certPath), Paths.get(keyPath), keyPassword);
+        return Credential.fromKeyStore(keyStore, keyPassword == null ? "" : keyPassword);
+      } catch (Exception e) {
+        throw new IllegalArgumentException(
+            "Failed to create certificate credential from PEM files: " + e, e);
+      }
+    }
+
+    throw new IllegalArgumentException(
+        "Client certificate authentication requires either clientCertKeystorePath, "
+            + "or both clientCertPath and clientKeyPath to be set");
   }
 
   @Override
