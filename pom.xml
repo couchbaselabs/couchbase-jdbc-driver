@@ -29,10 +29,10 @@
         <autoReleaseAfterClose>true</autoReleaseAfterClose>
     </properties>
 
-    <modules>
-        <module>enterprise-analytics-jdbc-driver</module>
-        <module>couchbase-analytics-jdbc-driver</module>
-    </modules>
+    <!-- Driver flavor modules are selected by the flavor-* profiles below so that an
+         in-reactor build (the connector's couchbase-jdbc.local path) only builds the
+         driver flavor it needs. A bare build with no flavor profile active builds
+         both (flavor-default, activeByDefault). -->
 
     <dependencyManagement>
         <dependencies>
@@ -395,6 +395,30 @@
     </build>
 
     <profiles>
+        <!-- Flavor selection. The connector reactor activates one of these by id
+             (mvn -P flavor-<name>); flavor-default builds both when none is given. -->
+        <profile>
+            <id>flavor-enterprise-analytics</id>
+            <modules>
+                <module>enterprise-analytics-jdbc-driver</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>flavor-couchbase-analytics</id>
+            <modules>
+                <module>couchbase-analytics-jdbc-driver</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>flavor-default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>enterprise-analytics-jdbc-driver</module>
+                <module>couchbase-analytics-jdbc-driver</module>
+            </modules>
+        </profile>
         <profile>
             <id>release</id>
             <activation>

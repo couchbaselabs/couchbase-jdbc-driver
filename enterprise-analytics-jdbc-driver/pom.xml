@@ -14,7 +14,7 @@
     <artifactId>enterprise-analytics-jdbc-driver</artifactId>
     <version>2.0.0-SNAPSHOT</version>
 
-    <name>Couchbase Enterprise Analytics JDBC Driver</name>
+    <name>Enterprise Analytics JDBC Driver</name>
     <description>Couchbase JDBC Driver for Enterprise Analytics, backed by the Analytics Java SDK</description>
 
     <build>
