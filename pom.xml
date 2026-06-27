@@ -15,7 +15,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <couchbase-sdk.version>3.12.0</couchbase-sdk.version>
-        <couchbase-analytics-sdk.version>1.1.0-SNAPSHOT</couchbase-analytics-sdk.version>
+        <couchbase-analytics-sdk.version>1.1.0</couchbase-analytics-sdk.version>
         <asterix-jdbc.version>0.9.8.5</asterix-jdbc.version>
         <test-containers.version>1.16.3</test-containers.version>
         <server.version>7.6.9</server.version>
