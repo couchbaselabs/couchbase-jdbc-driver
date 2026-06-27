@@ -39,6 +39,11 @@
             </testResource>
         </testResources>
         <plugins>
+            <!-- Generate the driver-only BOM (config inherited from parent pluginManagement). -->
+            <plugin>
+                <groupId>org.apache.hyracks</groupId>
+                <artifactId>license-automation-plugin</artifactId>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>

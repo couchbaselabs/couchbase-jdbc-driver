@@ -21,6 +21,7 @@
         <server.version>7.6.9</server.version>
         <server.build>7600</server.build>
         <cbas.quota>1200</cbas.quota>
+        <licenseAutomationPluginVersion>0.3.9</licenseAutomationPluginVersion>
 
         <!-- Don't sign artifacts unless the 'release' profile is active -->
         <gpg.skip>true</gpg.skip>
@@ -148,6 +149,60 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
                     <version>3.5.0</version>
+                </plugin>
+                <!-- Authoritative driver-only BOM (for standalone JDBC consumers). Managed here
+                     but only *activated* in the flavor modules (below), so the pom-packaging
+                     parent never runs it. ${project.basedir} resolves per flavor module, so
+                     ${project.basedir}/.. is the driver repo root where the templates live. -->
+                <plugin>
+                    <groupId>org.apache.hyracks</groupId>
+                    <artifactId>license-automation-plugin</artifactId>
+                    <version>${licenseAutomationPluginVersion}</version>
+                    <executions>
+                        <execution>
+                            <id>generate-bom</id>
+                            <phase>generate-resources</phase>
+                            <goals>
+                                <goal>generate</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <outputDir>${project.build.directory}</outputDir>
+                        <templateRootDir>${project.basedir}/..</templateRootDir>
+                        <location>${project.build.finalName}.jar/</location>
+                        <downloadDir>${project.build.directory}/license-download</downloadDir>
+                        <!-- core-io shades core-io-deps (netty/grpc) and protostellar without
+                             publishing their poms; don't try to resolve those shadowed artifacts. -->
+                        <models>
+                            <model>${project.basedir}/../src/main/licenses/supplemental-models.xml</model>
+                        </models>
+                        <generatedFiles>
+                            <generatedFile>
+                                <template>src/main/licenses/templates/bom.ftl</template>
+                                <outputFile>bom.txt</outputFile>
+                            </generatedFile>
+                            <generatedFile>
+                                <template>src/main/licenses/templates/bom-no-shadowed.ftl</template>
+                                <outputFile>bom_no_shadowed.txt</outputFile>
+                            </generatedFile>
+                            <generatedFile>
+                                <template>src/main/licenses/templates/thirdparty-list.ftl</template>
+                                <outputFile>list.txt</outputFile>
+                            </generatedFile>
+                        </generatedFiles>
+                        <excludedScopes>
+                            <excludedScope>test</excludedScope>
+                            <excludedScope>provided</excludedScope>
+                        </excludedScopes>
+                        <!-- Exclude the driver's own modules; keep core-io/java-client, asterix,
+                             and all third-party (incl. shaded) deps a JDBC consumer would pull. -->
+                        <excludes>
+                            <exclude>com.couchbase.client:enterprise-analytics-jdbc-driver</exclude>
+                            <exclude>com.couchbase.client:couchbase-analytics-jdbc-driver</exclude>
+                        </excludes>
+                        <timeoutSecs>10</timeoutSecs>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

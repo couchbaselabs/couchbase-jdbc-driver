@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ! Copyright 2026 Couchbase, Inc.
+ !-->
+<supplementalDataModels>
+  <supplement>
+    <project>
+      <groupId>com.couchbase.client</groupId>
+      <artifactId>core-io</artifactId>
+      <properties>
+        <license.ignoreShadowedDependencies>*:com.couchbase.client:core-io-deps:*,*:com.couchbase.client:protostellar:*</license.ignoreShadowedDependencies>
+      </properties>
+    </project>
+  </supplement>
+</supplementalDataModels>
