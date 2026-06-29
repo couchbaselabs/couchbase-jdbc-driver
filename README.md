@@ -5,7 +5,7 @@
 This project contains the source code for the Couchbase JDBC Driver which supports Enterprise Analytics and Couchbase Server Analytics. Its main purpose is to provide connectivity to any BI tool that supports a generic JDBC connection. Some examples of BI tools that support generic JDBC connectivity and should work include tools like: Qlik (Qlik Sense), SAP BusinessObjects, IBM Cognos, MicroStrategy, Looker, ThoughtSpot, DBeaver, and others.
 
 ## Prerequisites
-- Java environment JDK 8+.
+- Java environment JDK 11+.
 - The Couchbase JDBC Driver is compatible with both Enterprise Analytics and Couchbase Server Analytics (note: it does not support the Query Service).
 - **Analytics Tabular Views:** Pre-configured [tabular views](https://docs.couchbase.com/analytics/sqlpp/5a_views.html) for data access
 
