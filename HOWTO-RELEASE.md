@@ -47,12 +47,10 @@ When you're satisfied with the test results, it's time to...
 
 ## Bump the project version numbers
 
-Each flavor has its own version. Edit the version in the relevant child POM and remove the `-SNAPSHOT` suffix:
+Each flavor has its own version. Edit the version for the flavor you're releasing and remove the `-SNAPSHOT` suffix:
 
-- `enterprise-analytics-jdbc-driver/pom.xml` — Enterprise Analytics flavor (e.g. `2.0.0`)
-- `couchbase-analytics-jdbc-driver/pom.xml` — Couchbase Server Analytics flavor (e.g. `1.2.0`)
-
-The root `pom.xml` version (`1.0.0-SNAPSHOT`) is the aggregator POM and is not published; leave it unchanged.
+- `couchbase-operational-insights-jdbc-driver/pom.xml` — Couchbase Operational Insights flavor (e.g. `3.0.0`)
+- root `pom.xml` — Couchbase Server Analytics flavor (e.g. `1.2.0`); `couchbase-analytics-jdbc-driver` declares no version of its own and inherits the root's. Bumping the root also means updating the `<parent>` version in both child POMs
 
 Commit with message "Prepare x.y.z release" (where x.y.z is the version you're releasing).
 Review the changes in Gerrit, and submit them.
@@ -76,11 +74,11 @@ Here it is, the moment of truth. When you're ready to deploy both flavors to the
 
     mvn clean deploy -Prelease
 
-This deploys both `enterprise-analytics-jdbc-driver` and `couchbase-analytics-jdbc-driver` in a single reactor run.
+This deploys both `couchbase-operational-insights-jdbc-driver` and `couchbase-analytics-jdbc-driver` in a single reactor run.
 
 To deploy only one flavor:
 
-    mvn clean deploy -Prelease -pl enterprise-analytics-jdbc-driver
+    mvn clean deploy -Prelease -pl couchbase-operational-insights-jdbc-driver
     mvn clean deploy -Prelease -pl couchbase-analytics-jdbc-driver
 
 Alternatively, if you prefer to inspect the staging repository and
@@ -100,7 +98,7 @@ If the release succeeded, now's the time to publish the tag:
 
 ## Prepare for next dev cycle
 
-Increment the version in `enterprise-analytics-jdbc-driver/pom.xml` and/or `couchbase-analytics-jdbc-driver/pom.xml` and restore the `-SNAPSHOT` suffix.
+Increment the version in `couchbase-operational-insights-jdbc-driver/pom.xml` and/or the root `pom.xml` (Couchbase Server Analytics flavor) and restore the `-SNAPSHOT` suffix.
 Commit and push to Gerrit. Breathe in. Breathe out.
 
 ## Publishing a snapshot

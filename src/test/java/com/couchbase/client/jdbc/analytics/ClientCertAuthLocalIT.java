@@ -139,7 +139,7 @@ class ClientCertAuthLocalIT {
             } catch (Exception e) {
                 LOGGER.warning("Failed to configure server for cert auth: " + e.getMessage());
                 LOGGER.warning("Server configuration requires correct management port. " +
-                    "Set -Dlocal.mgmtPort=<port> (e.g., 18091 for Couchbase Server, or your Enterprise Analytics management port)");
+                    "Set -Dlocal.mgmtPort=<port> (e.g., 18091 for Couchbase Server, or your Couchbase Operational Insights management port)");
                 // Don't fail - tests will skip if server isn't configured
             }
         } else if (CONFIGURE_SERVER) {

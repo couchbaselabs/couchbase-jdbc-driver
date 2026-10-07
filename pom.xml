@@ -198,7 +198,7 @@
                         <!-- Exclude the driver's own modules; keep core-io/java-client, asterix,
                              and all third-party (incl. shaded) deps a JDBC consumer would pull. -->
                         <excludes>
-                            <exclude>com.couchbase.client:enterprise-analytics-jdbc-driver</exclude>
+                            <exclude>com.couchbase.client:couchbase-operational-insights-jdbc-driver</exclude>
                             <exclude>com.couchbase.client:couchbase-analytics-jdbc-driver</exclude>
                         </excludes>
                         <timeoutSecs>10</timeoutSecs>
@@ -453,9 +453,9 @@
         <!-- Flavor selection. The connector reactor activates one of these by id
              (mvn -P flavor-<name>); flavor-default builds both when none is given. -->
         <profile>
-            <id>flavor-enterprise-analytics</id>
+            <id>flavor-couchbase-operational-insights</id>
             <modules>
-                <module>enterprise-analytics-jdbc-driver</module>
+                <module>couchbase-operational-insights-jdbc-driver</module>
             </modules>
         </profile>
         <profile>
@@ -470,7 +470,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
-                <module>enterprise-analytics-jdbc-driver</module>
+                <module>couchbase-operational-insights-jdbc-driver</module>
                 <module>couchbase-analytics-jdbc-driver</module>
             </modules>
         </profile>

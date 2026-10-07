@@ -39,9 +39,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * Integration tests for the enterprise-analytics-jdbc-driver against a local Enterprise Analytics
- * instance. Covers deferred mode, query cancellation, compile-only, ping, and
- * server version retrieval.
+ * Integration tests for the couchbase-operational-insights-jdbc-driver against a local
+ * Couchbase Operational Insights instance. Covers deferred mode, query cancellation,
+ * compile-only, ping, and server version retrieval.
  *
  * <h2>Configuration:</h2>
  * Set these system properties before running:
@@ -53,7 +53,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *
  * <h2>Run Command:</h2>
  * <pre>
- * mvn test -pl enterprise-analytics-jdbc-driver -Dtest=EnterpriseAnalyticsLocalIT \
+ * mvn test -pl couchbase-operational-insights-jdbc-driver -Dtest=OperationalInsightsLocalIT \
  *   -Dlocal.url=jdbc:couchbase:analytics://localhost:9600 \
  *   -Dlocal.user=couchbase \
  *   -Dlocal.password=couchbase
@@ -69,7 +69,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * accessible on standard ports, or the JDBC driver would need modification to
  * support custom SDK port configuration.</p>
  */
-class EnterpriseAnalyticsLocalIT {
+class OperationalInsightsLocalIT {
 
     // Direct URL configuration - most flexible approach
     private static final String URL = System.getProperty("local.url",
