@@ -344,7 +344,10 @@
                                 <exclude>META-INF/NOTICE</exclude>
                                 <exclude>META-INF/LICENSE</exclude>
                                 <exclude>META-INF/MANIFEST.MF</exclude>
-                                <exclude>META-INF/versions/9/**</exclude>
+                                <!-- Shade doesn't relocate classes under META-INF/versions, so these
+                                     would stay as com.fasterxml.jackson. The shaded jar isn't
+                                     Multi-Release, so the JVM never loads them anyway. -->
+                                <exclude>META-INF/versions/**</exclude>
                             </excludes>
                         </filter>
                         <filter>
