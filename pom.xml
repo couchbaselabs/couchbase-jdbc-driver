@@ -395,6 +395,41 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Deploy a POM without <parent>, so consumers never need couchbase-jdbc-driver-common
+                 (it isn't published to Maven Central). Must run after shade, in the same phase:
+                 it flattens shade's dependency-reduced POM, keeping the shaded deps out. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.8.0</version>
+                <configuration>
+                    <flattenMode>ossrh</flattenMode>
+                    <pomElements>
+                        <!-- Take <dependencies> from shade's dependency-reduced POM, not the effective
+                             model, which still lists the deps bundled into the shaded jar. -->
+                        <dependencies>keep</dependencies>
+                        <!-- Build-time only: the snapshot repo and the central-publishing extension. -->
+                        <repositories>remove</repositories>
+                        <build>remove</build>
+                    </pomElements>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten-clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
             <!-- Require profile `snapshot` or `release` when deploying.
                  Having explicit profiles (instead of relying on deploy plugin's
@@ -508,9 +543,12 @@
                                     <rules>
                                         <requireReleaseVersion>
                                             <message>Not a release version (remove -SNAPSHOT suffix!)</message>
+                                            <!-- The parent is flattened out of the deployed POM. -->
+                                            <failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
                                         </requireReleaseVersion>
                                         <requireReleaseDeps>
                                             <message>Can't release with snapshot dependencies!</message>
+                                            <failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
                                         </requireReleaseDeps>
                                     </rules>
                                     <fail>true</fail>

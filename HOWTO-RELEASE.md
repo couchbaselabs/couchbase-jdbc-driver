@@ -40,8 +40,8 @@ All set? In that case...
 
 ## Let's do this!
 
-Start by running `mvn clean verify -Prelease` to make sure both modules build successfully,
-artifact signing works, and the unit tests pass.
+Start by running `mvn clean verify` to make sure both modules build successfully
+and the unit tests pass.
 
 When you're satisfied with the test results, it's time to...
 
@@ -60,9 +60,15 @@ Review the changes in Gerrit, and submit them.
 Before tagging the release, run `git pull --rebase --autostash` so the commit you tag locally
 is exactly the same as the commit in Gerrit.
 
-Run the command `git tag -s x.y.z` (where x.y.z is the release version number).
+Tags are prefixed with the flavor, since each flavor has its own version:
 
-Use the previous version's tag message (e.g. `git show 0.11.0`) as a template for
+    git tag -s couchbase-operational-insights-x.y.z
+    git tag -s couchbase-analytics-x.y.z
+
+(where x.y.z is the release version number). The plain `x.y.z` and `vx.y.z` tags are from the
+single-flavor driver.
+
+Use the previous version's tag message (e.g. `git show 1.0.2`) as a template for
 the new version's tag message.
 
 Don't push the tag right away, though. Wait until the release is successful, and you're sure
@@ -72,20 +78,26 @@ there will be no more changes. Otherwise, it can be a pain to remove an unwanted
 
 Here it is, the moment of truth. When you're ready to deploy both flavors to the Maven Central Repository:
 
-    mvn clean deploy -Prelease
-
-This deploys both `couchbase-operational-insights-jdbc-driver` and `couchbase-analytics-jdbc-driver` in a single reactor run.
+    mvn clean deploy -Prelease,flavor-default -pl couchbase-operational-insights-jdbc-driver,couchbase-analytics-jdbc-driver
 
 To deploy only one flavor:
 
-    mvn clean deploy -Prelease -pl couchbase-operational-insights-jdbc-driver
-    mvn clean deploy -Prelease -pl couchbase-analytics-jdbc-driver
+    mvn clean deploy -Prelease,flavor-couchbase-operational-insights -pl couchbase-operational-insights-jdbc-driver
+    mvn clean deploy -Prelease,flavor-couchbase-analytics -pl couchbase-analytics-jdbc-driver
+
+Always pass both the `flavor-*` profile and `-pl`:
+
+* The driver modules are declared only in the `flavor-*` profiles. Naming any profile with `-P`
+  switches off the `activeByDefault` `flavor-default`, so `-Prelease` on its own builds only the root.
+* The root POM (`couchbase-jdbc-driver-common`) is never deployed. Each driver's deployed POM is
+  flattened (no `<parent>`), so consumers don't need it. Leaving out `-pl` puts the root in the
+  reactor, and the release enforcer fails on its `-SNAPSHOT` version before anything is deployed.
 
 Alternatively, if you prefer to inspect the staging repository and
 [complete the release manually](https://central.sonatype.org/pages/releasing-the-deployment.html),
 set this additional property:
 
-    mvn clean deploy -Prelease -DautoReleaseAfterClose=false
+    mvn clean deploy -Prelease,flavor-couchbase-operational-insights -pl couchbase-operational-insights-jdbc-driver -DautoReleaseAfterClose=false
 
 Remember, you can add `-DskipITs` to skip integration tests if appropriate.
 
@@ -94,7 +106,7 @@ case you might want to check out the Troubleshooting section below.
 
 If the release succeeded, now's the time to publish the tag:
 
-    git push gerrit x.y.z
+    git push gerrit couchbase-operational-insights-x.y.z   # or couchbase-analytics-x.y.z
 
 ## Prepare for next dev cycle
 
@@ -105,7 +117,7 @@ Commit and push to Gerrit. Breathe in. Breathe out.
 
 After every passing nightly build, a snapshot should be published to the Sonatype OSS snapshot repository by running this command (publishes both flavors):
 
-    mvn clean deploy -Psnapshot
+    mvn clean deploy -Psnapshot,flavor-default -pl couchbase-operational-insights-jdbc-driver,couchbase-analytics-jdbc-driver
 
 ## Troubleshooting
 
