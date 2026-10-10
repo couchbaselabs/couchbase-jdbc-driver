@@ -108,6 +108,31 @@ If the release succeeded, now's the time to publish the tag:
 
     git push gerrit couchbase-operational-insights-x.y.z   # or couchbase-analytics-x.y.z
 
+## Publish the relocation POM (1.2.1 only)
+
+Through 1.1.1 the driver was published as `com.couchbase.client:couchbase-jdbc-driver`; from 1.2.1
+the Couchbase Server Analytics flavor is `com.couchbase.client:couchbase-analytics-jdbc-driver`.
+To send users of the old coordinates to the new ones, the 1.2.1 release (and only that release)
+also publishes [relocation/couchbase-jdbc-driver-1.2.1.pom](relocation/couchbase-jdbc-driver-1.2.1.pom)
+as `couchbase-jdbc-driver:1.2.1`. Users who upgrade to it resolve the new artifact, and Maven warns
+them to switch; from then on they get releases under the new artifactId, so no later release
+publishes a relocation POM (JDBCC-65).
+
+Publish it after `couchbase-analytics-jdbc-driver:1.2.1` itself is on Maven Central. It is a
+standalone file, not part of the Maven build, so upload it to the Central Portal as a bundle:
+
+    mkdir -p bundle/com/couchbase/client/couchbase-jdbc-driver/1.2.1
+    cd bundle/com/couchbase/client/couchbase-jdbc-driver/1.2.1
+    cp ../../../../../../relocation/couchbase-jdbc-driver-1.2.1.pom .
+    gpg --armor --detach-sign couchbase-jdbc-driver-1.2.1.pom
+    md5sum < couchbase-jdbc-driver-1.2.1.pom | cut -d' ' -f1 > couchbase-jdbc-driver-1.2.1.pom.md5
+    sha1sum < couchbase-jdbc-driver-1.2.1.pom | cut -d' ' -f1 > couchbase-jdbc-driver-1.2.1.pom.sha1
+    cd ../../../../../ && zip -r ../couchbase-jdbc-driver-1.2.1-relocation.zip com && cd ..
+
+(On a Mac, use `md5 -q` and `shasum -a 1` in place of `md5sum` and `sha1sum`.) Then go to
+https://central.sonatype.com/publishing, choose "Publish Component", upload
+`couchbase-jdbc-driver-1.2.1-relocation.zip`, and publish the deployment once it validates.
+
 ## Prepare for next dev cycle
 
 Increment the version in `couchbase-operational-insights-jdbc-driver/pom.xml` and/or the root `pom.xml` (Couchbase Server Analytics flavor) and restore the `-SNAPSHOT` suffix.

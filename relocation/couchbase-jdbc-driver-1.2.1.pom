@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Relocation POM, published to Maven Central once, alongside the 1.2.1 release
+  of couchbase-analytics-jdbc-driver (JDBCC-65). Through 1.1.1 the driver was
+  published as com.couchbase.client:couchbase-jdbc-driver; from 1.2.1 the
+  Couchbase Server Analytics flavor is published as
+  com.couchbase.client:couchbase-analytics-jdbc-driver. This POM sends users
+  of the old coordinates who upgrade to 1.2.1 to the new artifact, and Maven
+  warns them to switch. Later releases publish no relocation POM. See
+  HOWTO-RELEASE.md, "Publish the relocation POM".
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.couchbase.client</groupId>
+    <artifactId>couchbase-jdbc-driver</artifactId>
+    <version>1.2.1</version>
+    <packaging>pom</packaging>
+
+    <name>Couchbase JDBC Driver (relocated)</name>
+    <description>Relocated to com.couchbase.client:couchbase-analytics-jdbc-driver</description>
+    <url>https://github.com/couchbaselabs/couchbase-jdbc-driver</url>
+
+    <organization>
+        <name>Couchbase, Inc.</name>
+        <url>https://couchbase.com</url>
+    </organization>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <id>peeyush</id>
+            <name>Peeyush Gupta</name>
+            <email>peeyush.gupta@couchbase.com</email>
+        </developer>
+        <developer>
+            <id>daschl</id>
+            <name>Michael Nitschinger</name>
+            <email>michael.nitschinger@couchbase.com</email>
+        </developer>
+        <developer>
+            <id>dlychagin-cb</id>
+            <name>Dmitry Lychagin</name>
+            <email>dmitry.lychagin@couchbase.com</email>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:https://github.com/couchbaselabs/couchbase-jdbc-driver.git</connection>
+        <developerConnection>scm:git:https://github.com/couchbaselabs/couchbase-jdbc-driver.git</developerConnection>
+        <url>https://github.com/couchbaselabs/couchbase-jdbc-driver</url>
+    </scm>
+
+    <distributionManagement>
+        <relocation>
+            <groupId>com.couchbase.client</groupId>
+            <artifactId>couchbase-analytics-jdbc-driver</artifactId>
+            <version>1.2.1</version>
+            <message>The Couchbase Server Analytics JDBC driver is now published as com.couchbase.client:couchbase-analytics-jdbc-driver; update your dependency to use it. For Couchbase Operational Insights (formerly Enterprise Analytics), use com.couchbase.client:couchbase-operational-insights-jdbc-driver instead.</message>
+        </relocation>
+    </distributionManagement>
+</project>
