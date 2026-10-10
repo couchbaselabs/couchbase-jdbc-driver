@@ -23,6 +23,12 @@
         <cbas.quota>1200</cbas.quota>
         <licenseAutomationPluginVersion>0.3.9</licenseAutomationPluginVersion>
 
+        <!-- The build number of the build-from-manifest build that made this jar,
+             recorded in its manifest as Impl-Build so that a jar can be traced
+             back to its build (and from there to its build manifest). The
+             production build passes -Dbld.num; any other build records 0. -->
+        <bld.num>0</bld.num>
+
         <!-- Don't sign artifacts unless the 'release' profile is active -->
         <gpg.skip>true</gpg.skip>
 
@@ -296,6 +302,7 @@
                                 <manifestEntries>
                                     <Impl-Version>${project.version}</Impl-Version>
                                     <Impl-Git-Revision>${buildNumber}</Impl-Git-Revision>
+                                    <Impl-Build>${bld.num}</Impl-Build>
                                 </manifestEntries>
                             </manifestSection>
                             <manifestSection>
