@@ -37,6 +37,13 @@
              production build passes -Dbld.num; any other build records 0. -->
         <bld.num>0</bld.num>
 
+        <!-- The jar's META-INF/NOTICE is the Black Duck notices report published to
+             product-metadata for this version, which the build manifest checks out
+             beside this repo. ${project.basedir}/../.. is that checkout's root from a
+             flavor module, both in the driver's own manifest and in the connector's. -->
+        <product.metadata.dir>${project.basedir}/../../product-metadata</product.metadata.dir>
+        <product.metadata.url>https://raw.githubusercontent.com/couchbase/product-metadata/refs/heads/master</product.metadata.url>
+
         <!-- Don't sign artifacts unless the 'release' profile is active -->
         <gpg.skip>true</gpg.skip>
 
@@ -225,6 +232,51 @@
                         </excludes>
                         <timeoutSecs>10</timeoutSecs>
                     </configuration>
+                </plugin>
+                <!-- META-INF/NOTICE is the published Black Duck notices for this version (keyed
+                     without -SNAPSHOT). The first build of a new version precedes its first
+                     scan, so when there are no notices yet the build warns and writes a NOTICE
+                     pointing at where they will be published. Managed here, activated in the
+                     flavor modules. -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>3.1.0</version>
+                    <executions>
+                        <execution>
+                            <id>blackduck-notice</id>
+                            <phase>process-resources</phase>
+                            <goals>
+                                <goal>run</goal>
+                            </goals>
+                            <configuration>
+                                <target xmlns:if="ant:if" xmlns:unless="ant:unless">
+                                    <loadresource property="notice.version">
+                                        <string value="${project.version}"/>
+                                        <filterchain>
+                                            <replaceregex pattern="-SNAPSHOT$" replace=""/>
+                                        </filterchain>
+                                    </loadresource>
+                                    <property name="notice.path" value="couchbase-jdbc-driver/blackduck/${notice.version}/notices.txt"/>
+                                    <property name="notice.file" location="${product.metadata.dir}/${notice.path}"/>
+                                    <property name="notice.url" value="${product.metadata.url}/${notice.path}"/>
+                                    <property name="notice.name" value="${project.name}"/>
+                                    <available file="${notice.file}" property="notice.present"/>
+                                    <echo if:set="notice.present" level="info">Using Black Duck notices: ${notice.file}</echo>
+                                    <copy if:set="notice.present" overwrite="true" file="${notice.file}"
+                                          tofile="${project.build.outputDirectory}/META-INF/NOTICE"/>
+                                    <echo unless:set="notice.present" level="warning">WARNING: no Black Duck notices at ${notice.file}; the NOTICE points at ${notice.url}</echo>
+                                    <copy unless:set="notice.present" overwrite="true"
+                                          file="${project.basedir}/../src/main/licenses/NOTICE-pending.txt"
+                                          tofile="${project.build.outputDirectory}/META-INF/NOTICE">
+                                        <filterchain>
+                                            <expandproperties/>
+                                        </filterchain>
+                                    </copy>
+                                </target>
+                            </configuration>
+                        </execution>
+                    </executions>
                 </plugin>
                 <!-- ShadedJarLoggingIT tests the shaded jar itself, after relocation, so it runs
                      in integration-test rather than with the unit tests. It loads the jar on its

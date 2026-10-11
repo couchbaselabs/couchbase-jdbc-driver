@@ -35,6 +35,11 @@
                 <groupId>org.apache.hyracks</groupId>
                 <artifactId>license-automation-plugin</artifactId>
             </plugin>
+            <!-- Ship the Black Duck notices as META-INF/NOTICE (config in parent pluginManagement). -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+            </plugin>
             <!-- Test the shaded jar's logging (config inherited from parent pluginManagement). -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
