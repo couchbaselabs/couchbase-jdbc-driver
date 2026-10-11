@@ -325,12 +325,122 @@
                             <pattern>com.fasterxml.jackson</pattern>
                             <shadedPattern>org.apache.asterix.jdbc.core.deps.com.fasterxml.jackson</shadedPattern>
                         </relocation>
+                        <!-- Private copies of the other bundled libraries, so an application's own
+                             (possibly different) version can't collide with ours on the classpath. -->
+                        <relocation>
+                            <pattern>reactor</pattern>
+                            <shadedPattern>com.couchbase.client.jdbc.deps.reactor</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.reactivestreams</pattern>
+                            <shadedPattern>com.couchbase.client.jdbc.deps.org.reactivestreams</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>kotlin</pattern>
+                            <shadedPattern>com.couchbase.client.jdbc.deps.kotlin</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>okhttp3</pattern>
+                            <shadedPattern>com.couchbase.client.jdbc.deps.okhttp3</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>okio</pattern>
+                            <shadedPattern>com.couchbase.client.jdbc.deps.okio</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.bouncycastle</pattern>
+                            <shadedPattern>com.couchbase.client.jdbc.deps.org.bouncycastle</shadedPattern>
+                            <!-- Redundant with the pattern, but shade checks includes before excludes:
+                                 without it every class name in the jar is matched against all the
+                                 excludes below (minutes, for the Analytics jar). -->
+                            <includes>
+                                <include>org.bouncycastle.**</include>
+                            </includes>
+                            <!-- BC's system/security property names (e.g. org.bouncycastle.rsa.max_size) are plain
+                                 strings that relocation would otherwise rewrite, silently ignoring
+                                 -D settings. Regenerate on every BC upgrade:
+                                 python3 dev/bc_propnames.py bcprov-*.jar bcpkix-*.jar bcutil-*.jar -->
+                            <excludes>
+                                <exclude>org.bouncycastle.argon2.max_memory_exp</exclude>
+                                <exclude>org.bouncycastle.argon2.max_parallelism</exclude>
+                                <exclude>org.bouncycastle.argon2.max_passes</exclude>
+                                <exclude>org.bouncycastle.asn1.allow_non_der_time</exclude>
+                                <exclude>org.bouncycastle.asn1.allow_unsafe_integer</exclude>
+                                <exclude>org.bouncycastle.asn1.allow_wrong_oid_enc</exclude>
+                                <exclude>org.bouncycastle.asn1.allow_zoneless_utctime</exclude>
+                                <exclude>org.bouncycastle.asn1.max_cons_depth</exclude>
+                                <exclude>org.bouncycastle.asn1.max_limit</exclude>
+                                <exclude>org.bouncycastle.bcfks.max_it_count</exclude>
+                                <exclude>org.bouncycastle.bcfks.max_scrypt_memory</exclude>
+                                <exclude>org.bouncycastle.bcfks.store_it_count</exclude>
+                                <exclude>org.bouncycastle.bks.enable_v1</exclude>
+                                <exclude>org.bouncycastle.bks.max_it_count</exclude>
+                                <exclude>org.bouncycastle.constraints.allow_override</exclude>
+                                <exclude>org.bouncycastle.debug.est</exclude>
+                                <exclude>org.bouncycastle.dh.allow_unsafe_p_value</exclude>
+                                <exclude>org.bouncycastle.dh.max_size</exclude>
+                                <exclude>org.bouncycastle.drbg.effective_256bits_entropy</exclude>
+                                <exclude>org.bouncycastle.drbg.entropy_thread</exclude>
+                                <exclude>org.bouncycastle.drbg.entropysource</exclude>
+                                <exclude>org.bouncycastle.drbg.gather_pause_secs</exclude>
+                                <exclude>org.bouncycastle.dsa.FIPS186-2for1024bits</exclude>
+                                <exclude>org.bouncycastle.dsa.max_size</exclude>
+                                <exclude>org.bouncycastle.ec.disable</exclude>
+                                <exclude>org.bouncycastle.ec.disable_f2m</exclude>
+                                <exclude>org.bouncycastle.ec.disable_mqv</exclude>
+                                <exclude>org.bouncycastle.ec.enable_pc</exclude>
+                                <exclude>org.bouncycastle.ec.fp_certainty</exclude>
+                                <exclude>org.bouncycastle.ec.fp_max_size</exclude>
+                                <exclude>org.bouncycastle.ec.max_f2m_field_size</exclude>
+                                <exclude>org.bouncycastle.emulate.oracle</exclude>
+                                <exclude>org.bouncycastle.fpe.disable</exclude>
+                                <exclude>org.bouncycastle.fpe.disable_ff1</exclude>
+                                <exclude>org.bouncycastle.gcm.allow_short_tags</exclude>
+                                <exclude>org.bouncycastle.jsse.hostname_check_cn_fallback</exclude>
+                                <exclude>org.bouncycastle.mime.max_depth</exclude>
+                                <exclude>org.bouncycastle.ocsp.max_response_size</exclude>
+                                <exclude>org.bouncycastle.openpgp.max_armor_header_length</exclude>
+                                <exclude>org.bouncycastle.openpgp.max_armor_headers</exclude>
+                                <exclude>org.bouncycastle.openssh.max_rounds</exclude>
+                                <exclude>org.bouncycastle.pbe.max_iteration_count</exclude>
+                                <exclude>org.bouncycastle.pbe.max_scrypt_memory</exclude>
+                                <exclude>org.bouncycastle.pemreader.lax</exclude>
+                                <exclude>org.bouncycastle.pkcs1.not_strict</exclude>
+                                <exclude>org.bouncycastle.pkcs1.strict</exclude>
+                                <exclude>org.bouncycastle.pkcs1.strict_digestinfo</exclude>
+                                <exclude>org.bouncycastle.pkcs12.allow_sun_secret_keys</exclude>
+                                <exclude>org.bouncycastle.pkcs12.default</exclude>
+                                <exclude>org.bouncycastle.pkcs12.ignore_useless_passwd</exclude>
+                                <exclude>org.bouncycastle.pkcs12.max_it_count</exclude>
+                                <exclude>org.bouncycastle.pkcs12.store_it_count</exclude>
+                                <exclude>org.bouncycastle.pkcs8.v1_info_only</exclude>
+                                <exclude>org.bouncycastle.pkmac.max_iteration_count</exclude>
+                                <exclude>org.bouncycastle.rsa.allow_unsafe_mod</exclude>
+                                <exclude>org.bouncycastle.rsa.max_mr_tests</exclude>
+                                <exclude>org.bouncycastle.rsa.max_size</exclude>
+                                <exclude>org.bouncycastle.rsa.no_lenstra_check</exclude>
+                                <exclude>org.bouncycastle.x509.CRLDP_protocols</exclude>
+                                <exclude>org.bouncycastle.x509.allow_absent_equiv_NULL</exclude>
+                                <exclude>org.bouncycastle.x509.allow_ca_without_crl_sign</exclude>
+                                <exclude>org.bouncycastle.x509.allow_empty_issuer_cert</exclude>
+                                <exclude>org.bouncycastle.x509.allow_lenient_rfc822_name</exclude>
+                                <exclude>org.bouncycastle.x509.allow_non-der_tbscert</exclude>
+                                <exclude>org.bouncycastle.x509.crl_cache_ttl</exclude>
+                                <exclude>org.bouncycastle.x509.enableCRLDP</exclude>
+                                <exclude>org.bouncycastle.x509.ignore_repeated_extensions</exclude>
+                                <exclude>org.bouncycastle.x509.max_cert_path_build_nodes</exclude>
+                                <exclude>org.bouncycastle.x509.max_policy_nodes</exclude>
+                                <exclude>org.bouncycastle.x509.sgp22_name_constraints</exclude>
+                            </excludes>
+                        </relocation>
                     </relocations>
                     <filters>
                         <filter>
                             <artifact>*:*</artifact>
                             <excludes>
-                                <exclude>module-info.class</exclude>
+                                <!-- Every module descriptor, including META-INF/versions/N/ ones: the driver
+                                     is an automatic module (com.couchbase.client.jdbc), not jspecify etc. -->
+                                <exclude>**/module-info.class</exclude>
                                 <exclude>META-INF/services/reactor.blockhound.integration.BlockHoundIntegration</exclude>
                                 <!-- Bouncy Castle (and other signed JARs) embed .SF/.RSA/.DSA/.EC
                                      signature files. Shading repackages the bytes, so the original
@@ -358,6 +468,17 @@
                             </excludes>
                         </filter>
                         <filter>
+                            <artifact>org.bouncycastle:*</artifact>
+                            <excludes>
+                                <!-- Not relocated by shade, and ignored anyway: the jar is not Multi-Release. -->
+                                <exclude>META-INF/versions/**</exclude>
+                                <!-- The driver instantiates its provider directly. Advertising it via
+                                     ServiceLoader would let a java.security "security.provider.N=BC"
+                                     entry resolve to our relocated class instead of the app's BC. -->
+                                <exclude>META-INF/services/java.security.Provider</exclude>
+                            </excludes>
+                        </filter>
+                        <filter>
                             <artifact>org.apache.asterix:*</artifact>
                             <excludes>
                                 <exclude>META-INF/NOTICE</exclude>
@@ -375,6 +496,12 @@
                             <artifact>io.projectreactor:reactor-core</artifact>
                             <excludes>
                                 <exclude>META-INF/MANIFEST.MF</exclude>
+                                <!-- Multi-release classes aren't relocated by shade and the jar isn't
+                                     Multi-Release, so they would only be unrelocated dead weight. -->
+                                <exclude>META-INF/versions/**</exclude>
+                                <!-- Micrometer context-propagation hook; we don't ship micrometer, and its
+                                     entry would name the unrelocated reactor class. -->
+                                <exclude>META-INF/services/io.micrometer.context.ContextAccessor</exclude>
                             </excludes>
                         </filter>
                         <filter>
