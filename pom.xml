@@ -17,10 +17,18 @@
         <couchbase-sdk.version>3.12.3</couchbase-sdk.version>
         <couchbase-analytics-sdk.version>1.1.0</couchbase-analytics-sdk.version>
         <asterix-jdbc.version>0.9.8.5</asterix-jdbc.version>
-        <test-containers.version>1.16.3</test-containers.version>
+        <!-- 1.21.4: the first 1.x that talks to Docker Engine 29+, which refuses API versions below 1.44
+             (1.16.3 pinned 1.32). It still falls back to 1.32 for older daemons and honours DOCKER_API_VERSION. -->
+        <test-containers.version>1.21.4</test-containers.version>
         <server.version>7.6.9</server.version>
         <server.build>7600</server.build>
         <cbas.quota>1200</cbas.quota>
+
+        <!-- Cluster images for the Docker end-to-end tests (profile docker-e2e); each can be overridden with -D. -->
+        <e2e.server.image>couchbase/server:enterprise-${server.version}</e2e.server.image>
+        <e2e.oi.image>build-docker.couchbase.com/cb-vanilla/operational-insights:3.0.0-1092</e2e.oi.image>
+        <e2e.ea.image>couchbase/enterprise-analytics:2.2.1</e2e.ea.image>
+        <e2e.s3mock.image>adobe/s3mock:4.12.4</e2e.s3mock.image>
         <licenseAutomationPluginVersion>0.3.9</licenseAutomationPluginVersion>
 
         <!-- The build number of the build-from-manifest build that made this jar,
@@ -731,6 +739,81 @@
                 <module>couchbase-operational-insights-jdbc-driver</module>
                 <module>couchbase-analytics-jdbc-driver</module>
             </modules>
+        </profile>
+        <!-- End-to-end tests of the packaged driver against a real cluster in Docker (*DockerE2EIT).
+             Active unless -DskipDockerE2E is given; the tests skip themselves when no Docker environment is
+             available, so a build without Docker still passes. -DskipITs or -DskipTests also skip them.
+
+             The execution has its own id, includes, reports directory and summary file, so it runs alongside
+             any other failsafe execution without either seeing the other's results.
+
+             Failsafe puts the project's packaged jar - which the shade plugin has replaced with the shaded jar -
+             on the classpath in place of target/classes. Excluding the compile and runtime dependencies leaves
+             that jar as the only copy of the driver and its bundled libraries, as a user would have it. -->
+        <profile>
+            <id>docker-e2e</id>
+            <activation>
+                <property>
+                    <name>!skipDockerE2E</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>3.2.5</version>
+                        <executions>
+                            <execution>
+                                <id>docker-e2e</id>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                                <configuration>
+                                    <includes combine.self="override">
+                                        <include>**/*DockerE2EIT.java</include>
+                                    </includes>
+                                    <classpathDependencyScopeExclude>compile+runtime</classpathDependencyScopeExclude>
+                                    <!-- Testcontainers' docker-java needs plain jackson-annotations, and
+                                         Testcontainers itself slf4j-api, which the exclusion above drops because
+                                         the driver also depends on them (the shaded jar carries only relocated
+                                         copies). The driver never sees these. slf4j-simple prints Testcontainers'
+                                         own progress, which the driver's java.util.logging output doesn't include. -->
+                                    <additionalClasspathDependencies>
+                                        <additionalClasspathDependency>
+                                            <groupId>com.fasterxml.jackson.core</groupId>
+                                            <artifactId>jackson-annotations</artifactId>
+                                            <version>2.21</version>
+                                        </additionalClasspathDependency>
+                                        <additionalClasspathDependency>
+                                            <groupId>org.slf4j</groupId>
+                                            <artifactId>slf4j-api</artifactId>
+                                            <version>1.7.36</version>
+                                        </additionalClasspathDependency>
+                                        <additionalClasspathDependency>
+                                            <groupId>org.slf4j</groupId>
+                                            <artifactId>slf4j-simple</artifactId>
+                                            <version>1.7.36</version>
+                                        </additionalClasspathDependency>
+                                    </additionalClasspathDependencies>
+                                    <reportsDirectory>${project.build.directory}/failsafe-reports-docker-e2e</reportsDirectory>
+                                    <summaryFile>${project.build.directory}/failsafe-reports-docker-e2e/failsafe-summary.xml</summaryFile>
+                                    <systemPropertyVariables>
+                                        <e2e.driver.jar>${project.build.directory}/${project.build.finalName}.jar</e2e.driver.jar>
+                                        <e2e.driver.version>${project.version}</e2e.driver.version>
+                                        <e2e.server.image>${e2e.server.image}</e2e.server.image>
+                                        <e2e.oi.image>${e2e.oi.image}</e2e.oi.image>
+                                        <e2e.ea.image>${e2e.ea.image}</e2e.ea.image>
+                                        <e2e.s3mock.image>${e2e.s3mock.image}</e2e.s3mock.image>
+                                        <cbas.quota>${cbas.quota}</cbas.quota>
+                                    </systemPropertyVariables>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
         <profile>
             <id>release</id>
