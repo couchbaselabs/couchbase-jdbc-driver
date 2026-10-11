@@ -21,7 +21,6 @@ import com.couchbase.client.core.deps.io.netty.handler.ssl.util.InsecureTrustMan
 import com.couchbase.client.core.diagnostics.DiagnosticsResult;
 import com.couchbase.client.core.diagnostics.EndpointDiagnostics;
 import com.couchbase.client.core.env.CoreEnvironment;
-import com.couchbase.client.core.env.LoggerConfig;
 import com.couchbase.client.core.env.PropertyLoader;
 import com.couchbase.client.core.env.SecurityConfig;
 import com.couchbase.client.core.env.SystemPropertyPropertyLoader;
@@ -142,12 +141,6 @@ public class ConnectionManager {
   }
 
   private ClusterEnvironment generateEnvironment(final ConnectionCoordinate coordinate) {
-    // This logger config makes sure the SDK also uses java.util.Logging.
-    LoggerConfig.Builder loggerConfig = LoggerConfig
-            .builder()
-            .disableSlf4J(true)
-            .fallbackToConsole(false);
-
     SecurityConfig.Builder securityConfig = SecurityConfig
             .builder();
 
@@ -196,7 +189,6 @@ public class ConnectionManager {
             .builder()
             .load((PropertyLoader<CoreEnvironment.Builder>) builder ->
                     new SystemPropertyPropertyLoader(coordinate.properties()).load(builder))
-            .loggerConfig(loggerConfig)
             .securityConfig(securityConfig)
             .retryStrategy(new InterceptingRetryStrategy())
             .build();

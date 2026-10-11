@@ -218,6 +218,72 @@
                         <timeoutSecs>10</timeoutSecs>
                     </configuration>
                 </plugin>
+                <!-- ShadedJarLoggingIT tests the shaded jar itself, after relocation, so it runs
+                     in integration-test rather than with the unit tests. It loads the jar on its
+                     own and alongside an application's slf4j of either generation, which is
+                     copied here. Activated in the flavor modules, like the BOM above. -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>3.8.1</version>
+                    <executions>
+                        <execution>
+                            <id>copy-app-slf4j</id>
+                            <phase>pre-integration-test</phase>
+                            <goals>
+                                <goal>copy</goal>
+                            </goals>
+                            <configuration>
+                                <outputDirectory>${project.build.directory}/app-slf4j</outputDirectory>
+                                <artifactItems>
+                                    <artifactItem>
+                                        <groupId>org.slf4j</groupId>
+                                        <artifactId>slf4j-api</artifactId>
+                                        <version>1.7.36</version>
+                                    </artifactItem>
+                                    <artifactItem>
+                                        <groupId>org.slf4j</groupId>
+                                        <artifactId>slf4j-simple</artifactId>
+                                        <version>1.7.36</version>
+                                    </artifactItem>
+                                    <artifactItem>
+                                        <groupId>org.slf4j</groupId>
+                                        <artifactId>slf4j-api</artifactId>
+                                        <version>2.0.18</version>
+                                    </artifactItem>
+                                    <artifactItem>
+                                        <groupId>org.slf4j</groupId>
+                                        <artifactId>slf4j-simple</artifactId>
+                                        <version>2.0.18</version>
+                                    </artifactItem>
+                                </artifactItems>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>3.2.5</version>
+                    <configuration>
+                        <!-- Only this one: the other *IT classes need a cluster. -->
+                        <includes>
+                            <include>**/ShadedJarLoggingIT.java</include>
+                        </includes>
+                        <systemPropertyVariables>
+                            <shaded.jar>${project.build.directory}/${project.build.finalName}.jar</shaded.jar>
+                            <app.slf4j.dir>${project.build.directory}/app-slf4j</app.slf4j.dir>
+                        </systemPropertyVariables>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>integration-test</goal>
+                                <goal>verify</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -327,6 +393,13 @@
                         </relocation>
                         <!-- Private copies of the other bundled libraries, so an application's own
                              (possibly different) version can't collide with ours on the classpath. -->
+                        <!-- slf4j too, with the java.util.logging backend each flavor bundles
+                             (slf4j-jdk14): the SDK's log output always goes to java.util.logging,
+                             like the driver's own, whatever slf4j the application has. -->
+                        <relocation>
+                            <pattern>org.slf4j</pattern>
+                            <shadedPattern>com.couchbase.client.jdbc.deps.org.slf4j</shadedPattern>
+                        </relocation>
                         <relocation>
                             <pattern>reactor</pattern>
                             <shadedPattern>com.couchbase.client.jdbc.deps.reactor</shadedPattern>
@@ -522,6 +595,11 @@
                             </excludes>
                         </filter>
                     </filters>
+                    <transformers>
+                        <!-- Relocate service files with their classes: slf4j 2.x finds its backend
+                             through META-INF/services/org.slf4j.spi.SLF4JServiceProvider. -->
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                    </transformers>
                 </configuration>
                 <executions>
                     <execution>

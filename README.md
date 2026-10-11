@@ -122,6 +122,27 @@ Property | Required | Default | Valid Values | Description
 `minDriverVersion` | No | None | Version string | Minimally required driver version.
 `minDatabaseVersion` | No | None | Version string | Minimally required database version.
 
+## Logging
+
+The driver logs through `java.util.logging`, including the output of the Couchbase SDK it is
+built on. The SDK's own slf4j is bundled privately with a `java.util.logging` backend, so it
+never interferes with an application's slf4j, and its loggers keep their usual `com.couchbase.*`
+names.
+
+To raise the detail, set the level of the `com.couchbase` logger, for example in a
+`logging.properties` passed with `-Djava.util.logging.config.file=...`:
+
+```
+handlers = java.util.logging.ConsoleHandler
+java.util.logging.ConsoleHandler.level = FINE
+com.couchbase.level = FINE
+```
+
+An application that logs through slf4j (Logback, Log4j 2, ...) can route the driver's output into
+its own logging with the standard bridge: `jul-to-slf4j` (calling
+`SLF4JBridgeHandler.removeHandlersForRootLogger()` and `SLF4JBridgeHandler.install()` at startup),
+or Log4j 2's `log4j-jul` (`-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager`).
+
 ## Limitations
 - **Read-Only Operations:** Only SELECT queries are supported
 - **Tabular Views Required:** Data must be accessed through pre-configured tabular views

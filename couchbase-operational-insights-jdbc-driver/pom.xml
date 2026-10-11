@@ -35,6 +35,15 @@
                 <groupId>org.apache.hyracks</groupId>
                 <artifactId>license-automation-plugin</artifactId>
             </plugin>
+            <!-- Test the shaded jar's logging (config inherited from parent pluginManagement). -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
@@ -74,6 +83,19 @@
             <groupId>com.couchbase.client</groupId>
             <artifactId>couchbase-analytics-java-client</artifactId>
             <version>${couchbase-analytics-sdk.version}</version>
+        </dependency>
+        <!-- The slf4j API the Analytics SDK logs through, and its java.util.logging backend; both are
+             bundled and relocated (see the shade configuration in the parent). Keep them
+             at the version the Analytics SDK depends on. -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.18</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jdk14</artifactId>
+            <version>2.0.18</version>
         </dependency>
     </dependencies>
 

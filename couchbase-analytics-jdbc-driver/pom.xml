@@ -21,6 +21,19 @@
             <artifactId>java-client</artifactId>
             <version>${couchbase-sdk.version}</version>
         </dependency>
+        <!-- The slf4j API core-io logs through, and its java.util.logging backend; both are
+             bundled and relocated (see the shade configuration in the parent). Keep them
+             at the version core-io depends on. -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.36</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jdk14</artifactId>
+            <version>1.7.36</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -41,6 +54,15 @@
             <plugin>
                 <groupId>org.apache.hyracks</groupId>
                 <artifactId>license-automation-plugin</artifactId>
+            </plugin>
+            <!-- Test the shaded jar's logging (config inherited from parent pluginManagement). -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
