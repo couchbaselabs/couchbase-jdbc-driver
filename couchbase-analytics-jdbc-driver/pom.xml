@@ -54,6 +54,23 @@
             <plugin>
                 <groupId>org.apache.hyracks</groupId>
                 <artifactId>license-automation-plugin</artifactId>
+                <configuration>
+                    <!-- core-io shades protostellar's gRPC, protobuf and PerfMark, but the
+                         protostellar pom is unpublished and ignored (see supplemental-models.xml),
+                         so list them here, at the versions core-io ${couchbase-sdk.version} ships.
+                         Re-check them on any core-io bump. -->
+                    <extraDependencies>
+                        <extraDependency>io.grpc:grpc-api:1.69.0:shadowed</extraDependency>
+                        <extraDependency>io.grpc:grpc-core:1.69.0:shadowed</extraDependency>
+                        <extraDependency>io.grpc:grpc-netty:1.69.0:shadowed</extraDependency>
+                        <extraDependency>io.grpc:grpc-protobuf:1.69.0:shadowed</extraDependency>
+                        <extraDependency>io.grpc:grpc-protobuf-lite:1.69.0:shadowed</extraDependency>
+                        <extraDependency>io.grpc:grpc-stub:1.69.0:shadowed</extraDependency>
+                        <extraDependency>io.grpc:grpc-util:1.69.0:shadowed</extraDependency>
+                        <extraDependency>com.google.protobuf:protobuf-java:4.29.2:shadowed</extraDependency>
+                        <extraDependency>io.perfmark:perfmark-api:0.27.0:shadowed</extraDependency>
+                    </extraDependencies>
+                </configuration>
             </plugin>
             <!-- Ship the Black Duck notices as META-INF/NOTICE (config in parent pluginManagement). -->
             <plugin>
