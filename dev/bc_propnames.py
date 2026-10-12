@@ -1,8 +1,23 @@
+#
+# Copyright (c) 2026 Couchbase, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 """List BC string constants that look like 'org.bouncycastle.*' but are not class or
 package names, i.e. system/security property names that shade relocation must not rewrite.
 Reads whole CONSTANT_Utf8 entries from each class's constant pool (no regex truncation).
 Usage: python3 dev/bc_propnames.py <jar>... (the original, unshaded BC jars)."""
-import struct, sys, zipfile
+import re, struct, sys, zipfile
 
 def utf8_constants(data):
     if data[:4] != b'\xca\xfe\xba\xbe':
@@ -32,7 +47,6 @@ for jar in sys.argv[1:]:
             strings.update(s for s in utf8_constants(z.read(n)) if s.startswith('org.bouncycastle.'))
 packages = {c.rsplit('.', 1)[0] for c in classes}
 packages |= {p.rsplit('.', i)[0] for p in list(packages) for i in range(1, 8) if p.count('.') >= i}
-import re
 for s in sorted(strings):
     # Property names are plain dotted identifiers (may contain '-'); class names given as
     # strings (with '$'), resource bundles, messages and '|' lists are relocated as usual.

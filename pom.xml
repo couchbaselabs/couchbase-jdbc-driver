@@ -408,6 +408,9 @@
                             <pattern>org.slf4j</pattern>
                             <shadedPattern>com.couchbase.client.jdbc.deps.org.slf4j</shadedPattern>
                         </relocation>
+                        <!-- This also relocates reactor's system property names (reactor.bufferSize.small,
+                             reactor.schedulers.defaultPoolSize, ...), deliberately: an application's
+                             -Dreactor.* tuning is meant for its own reactor, not the driver's copy. -->
                         <relocation>
                             <pattern>reactor</pattern>
                             <shadedPattern>com.couchbase.client.jdbc.deps.reactor</shadedPattern>
@@ -522,6 +525,9 @@
                                 <!-- Every module descriptor, including META-INF/versions/N/ ones: the driver
                                      is an automatic module (com.couchbase.client.jdbc), not jspecify etc. -->
                                 <exclude>**/module-info.class</exclude>
+                                <!-- OSGi manifests (jspecify, okhttp) left in multi-release directories;
+                                     dead weight, the shaded jar isn't Multi-Release. -->
+                                <exclude>META-INF/versions/*/OSGI-INF/**</exclude>
                                 <exclude>META-INF/services/reactor.blockhound.integration.BlockHoundIntegration</exclude>
                                 <!-- Bouncy Castle (and other signed JARs) embed .SF/.RSA/.DSA/.EC
                                      signature files. Shading repackages the bytes, so the original
