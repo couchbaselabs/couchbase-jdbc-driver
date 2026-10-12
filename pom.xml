@@ -40,7 +40,9 @@
         <!-- The jar's META-INF/NOTICE is the Black Duck notices report published to
              product-metadata for this version, which the build manifest checks out
              beside this repo. ${project.basedir}/../.. is that checkout's root from a
-             flavor module, both in the driver's own manifest and in the connector's. -->
+             flavor module, both in the driver's own manifest and in the connector's.
+             The report is per release version, so a -SNAPSHOT, or the .tableau version
+             the Tableau connector stamps on the driver it embeds, uses its release's. -->
         <product.metadata.dir>${project.basedir}/../../product-metadata</product.metadata.dir>
         <product.metadata.url>https://raw.githubusercontent.com/couchbase/product-metadata/refs/heads/master</product.metadata.url>
 
@@ -254,7 +256,7 @@
                                     <loadresource property="notice.version">
                                         <string value="${project.version}"/>
                                         <filterchain>
-                                            <replaceregex pattern="-SNAPSHOT$" replace=""/>
+                                            <replaceregex pattern="(-SNAPSHOT|\.tableau)$" replace=""/>
                                         </filterchain>
                                     </loadresource>
                                     <property name="notice.path" value="couchbase-jdbc-driver/blackduck/${notice.version}/notices.txt"/>
